@@ -1,79 +1,15 @@
-const admin = require('firebase-admin');
-
-function getAdminApp(){
-  if(admin.apps.length) return admin.app();
-  const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g,'\n');
-  if(!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) throw new Error('Missing Firebase Admin environment variables');
-  return admin.initializeApp({credential: admin.credential.cert({projectId:process.env.FIREBASE_PROJECT_ID,clientEmail:process.env.FIREBASE_CLIENT_EMAIL,privateKey}),databaseURL:process.env.FIREBASE_DATABASE_URL});
-}
-function json(res,status,data){res.status(status).json(data)}
-async function body(req){ if(req.body && typeof req.body==='object') return req.body; return {}; }
-function admins(){return String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)}
-async function verify(req){
-  const h=req.headers.authorization||''; if(!h.startsWith('Bearer ')) throw Object.assign(new Error('Unauthorized'),{status:401});
-  const decoded=await admin.auth().verifyIdToken(h.slice(7));
-  if(!admins().includes(String(decoded.email||'').toLowerCase())) throw Object.assign(new Error('Forbidden'),{status:403});
-  return decoded;
-}
-const ALLOWED_DURATIONS = new Set([30,90,365,9999]);
-const DAY = 86400000;
-module.exports=async(req,res)=>{
-  res.setHeader('Cache-Control','no-store');
-  if(req.method!=='POST') return json(res,405,{error:'method_not_allowed'});
-  try{
-    getAdminApp(); const adminUser=await verify(req); const b=await body(req); const action=String(b.action||'').trim();
-    if(action==='list'){
-      const out=[]; let token;
-      do {
-        const page=await admin.auth().listUsers(1000,token);
-        page.users.forEach(u=>out.push({uid:u.uid,email:u.email||'',disabled:!!u.disabled,createdAt:u.metadata.creationTime||null,lastSignInAt:u.metadata.lastSignInTime||null}));
-        token=page.pageToken;
-      } while(token);
-      const snap=await admin.database().ref('licenses').once('value'); const licenses=snap.val()||{};
-      return json(res,200,{users:out.map(u=>({...u,license:licenses[u.uid]||null}))});
-    }
-    if(action==='create'){
-      const email=String(b.email||'').trim().toLowerCase(), password=String(b.password||'');
-      if(!/^\S+@\S+\.\S+$/.test(email)) return json(res,400,{error:'invalid_email'});
-      if(password.length<8) return json(res,400,{error:'password_too_short'});
-      const duration=Number(b.duration); if(!ALLOWED_DURATIONS.has(duration)) return json(res,400,{error:'invalid_duration'});
-      const now=Date.now(); const expiresAt=duration===9999?null:now+duration*DAY;
-      let user;
-      try{ user=await admin.auth().createUser({email,password,disabled:false}); }
-      catch(e){ if(e.code==='auth/email-already-exists')return json(res,409,{error:'email_exists'}); throw e; }
-      await admin.database().ref('licenses/'+user.uid).set({active:true,duration,expiresAt,createdAt:now,updatedAt:now,email});
-      return json(res,200,{ok:true,user:{uid:user.uid,email},license:{active:true,duration,expiresAt,createdAt:now,updatedAt:now}});
-    }
-    if(action==='update'){
-      const uid=String(b.uid||''); if(!uid)return json(res,400,{error:'missing_uid'});
-      if(uid===adminUser.uid && b.disabled===true) return json(res,400,{error:'cannot_disable_current_admin'});
-      const ref=admin.database().ref('licenses/'+uid); const snap=await ref.once('value'); const old=snap.val()||{};
-      const duration=b.duration===undefined?Number(old.duration||30):Number(b.duration);
-      if(!ALLOWED_DURATIONS.has(duration)) return json(res,400,{error:'invalid_duration'});
-      const active=b.active===undefined?old.active!==false:!!b.active; const now=Date.now();
-      let expiresAt=old.expiresAt?Number(old.expiresAt):null;
-      if(b.renew===true){
-        if(duration===9999) expiresAt=null;
-        else { const base=expiresAt && expiresAt>now ? expiresAt : now; expiresAt=base+duration*DAY; }
-      } else if(b.duration!==undefined){
-        expiresAt=duration===9999?null:now+duration*DAY;
-      }
-      const patch={...old,active,duration,expiresAt,updatedAt:now,email:old.email||null};
-      await ref.set(patch);
-      if(b.disabled!==undefined) await admin.auth().updateUser(uid,{disabled:!!b.disabled});
-      return json(res,200,{ok:true,license:patch});
-    }
-    if(action==='delete'){
-      const uid=String(b.uid||''); if(!uid)return json(res,400,{error:'missing_uid'});
-      if(uid===adminUser.uid) return json(res,400,{error:'cannot_delete_current_admin'});
-      await admin.database().ref('licenses/'+uid).remove(); await admin.auth().deleteUser(uid);
-      return json(res,200,{ok:true});
-    }
-    if(action==='resetPassword'){
-      const uid=String(b.uid||''); const password=String(b.password||'');
-      if(!uid||password.length<8)return json(res,400,{error:'invalid_input'});
-      await admin.auth().updateUser(uid,{password}); return json(res,200,{ok:true});
-    }
-    return json(res,400,{error:'unknown_action'});
-  }catch(e){ console.error(e); return json(res,e.status||500,{error:e.message||'server_error'}); }
-};
+'use strict';
+const admin=require('firebase-admin');
+function app(){if(admin.apps.length)return admin.app();const key=String(process.env.FIREBASE_PRIVATE_KEY||'').replace(/\\n/g,'\n');if(!process.env.FIREBASE_PROJECT_ID||!process.env.FIREBASE_CLIENT_EMAIL||!key)throw Error('Missing Firebase Admin environment variables');return admin.initializeApp({credential:admin.credential.cert({projectId:process.env.FIREBASE_PROJECT_ID,clientEmail:process.env.FIREBASE_CLIENT_EMAIL,privateKey:key}),databaseURL:process.env.FIREBASE_DATABASE_URL})}
+const j=(res,s,d)=>res.status(s).json(d);const admins=()=>String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+async function verify(req){const h=req.headers.authorization||'';if(!h.startsWith('Bearer '))throw Object.assign(Error('Unauthorized'),{status:401});const d=await admin.auth().verifyIdToken(h.slice(7));if(!admins().includes(String(d.email||'').toLowerCase()))throw Object.assign(Error('Forbidden'),{status:403});return d}
+module.exports=async(req,res)=>{res.setHeader('Cache-Control','no-store');if(req.method!=='POST')return j(res,405,{error:'method_not_allowed'});try{app();await verify(req);const b=req.body||{};const a=String(b.action||'');const db=admin.database();
+if(a==='list'){const out=[];let token;do{const page=await admin.auth().listUsers(1000,token);page.users.forEach(u=>out.push({uid:u.uid,email:u.email||'',disabled:!!u.disabled,createdAt:u.metadata.creationTime||null,lastSignInAt:u.metadata.lastSignInTime||null}));token=page.pageToken}while(token);const lic=(await db.ref('licenses').once('value')).val()||{};return j(res,200,{users:out.map(u=>({...u,license:lic[u.uid]||null})).filter(u=>!admins().includes(String(u.email).toLowerCase()))})}
+if(a==='create'){const email=String(b.email||'').trim().toLowerCase(),password=String(b.password||'');if(!/^\S+@\S+\.\S+$/.test(email))return j(res,400,{error:'invalid_email'});if(password.length<8)return j(res,400,{error:'password_too_short'});if(admins().includes(email))return j(res,400,{error:'admin_email_not_allowed'});const duration=[30,90,365,9999].includes(Number(b.duration))?Number(b.duration):30,now=Date.now(),expiresAt=duration===9999?null:now+duration*86400000;let u;try{u=await admin.auth().createUser({email,password,disabled:false})}catch(e){if(e.code==='auth/email-already-exists')return j(res,409,{error:'email_exists'});throw e}await db.ref('licenses/'+u.uid).set({active:true,duration,expiresAt,createdAt:now,updatedAt:now,email});return j(res,200,{ok:true,user:{uid:u.uid,email}})}
+if(a==='update'){const uid=String(b.uid||'');const ref=db.ref('licenses/'+uid);const old=(await ref.once('value')).val()||{};const duration=[30,90,365,9999].includes(Number(b.duration))?Number(b.duration):Number(old.duration||30);const now=Date.now();let expiresAt=old.expiresAt?Number(old.expiresAt):null;if(b.renew===true||b.duration!==undefined){if(duration===9999)expiresAt=null;else{const base=expiresAt&&expiresAt>now?expiresAt:now;expiresAt=base+duration*86400000}}const patch={...old,active:b.active===undefined?old.active!==false:!!b.active,duration,expiresAt,updatedAt:now};await ref.set(patch);if(b.disabled!==undefined)await admin.auth().updateUser(uid,{disabled:!!b.disabled});return j(res,200,{ok:true,license:patch})}
+if(a==='delete'){const uid=String(b.uid||'');await db.ref('licenses/'+uid).remove();await admin.auth().deleteUser(uid);return j(res,200,{ok:true})}
+if(a==='resetPassword'){const uid=String(b.uid||''),password=String(b.password||'');if(!uid||password.length<8)return j(res,400,{error:'invalid_input'});await admin.auth().updateUser(uid,{password});return j(res,200,{ok:true})}
+if(a==='resetDevice'){const uid=String(b.uid||'');const u=await admin.auth().getUser(uid);if(u.email){await db.ref('device_lock/'+u.email.replace(/\./g,',')).remove()}return j(res,200,{ok:true})}
+if(a==='getConfig'){const c=(await db.ref('nihongo_config').once('value')).val()||{};return j(res,200,{pricing:Array.isArray(c.pricing)?c.pricing:[]})}
+if(a==='saveConfig'){const pricing=Array.isArray(b.pricing)?b.pricing.map(p=>({duration:String(p.duration||''),price:Math.max(0,Number(p.price)||0),discountPrice:Math.max(0,Number(p.discountPrice)||0),days:Math.max(1,Number(p.days)||30),desc:String(p.desc||'')})):[];await db.ref('nihongo_config/pricing').set(pricing);return j(res,200,{ok:true,pricing})}
+return j(res,400,{error:'unknown_action'})}catch(e){console.error(e);return j(res,e.status||500,{error:e.message||'server_error'})}}
