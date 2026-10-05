@@ -1,0 +1,8 @@
+{
+  "name": "nihongo-premium-v10",
+  "private": true,
+  "version": "10.0.0",
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}
