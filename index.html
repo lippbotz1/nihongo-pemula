@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Nihongo Premium</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"><\/script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#081224;--card:rgba(20,28,48,.6);--border:rgba(140,160,220,.1);--border-bright:rgba(140,160,220,.25);--text:#eef1f8;--text-dim:#91a8c8;--text-soft:#c0c8dc;--amber:#7dc0ff;--indigo:#5ea7ff;--mint:#5ac8fa;--rose:#60a5fa;--violet:#72a7ff;--gp:linear-gradient(135deg,#5ea7ff 0%,#39c8ff 100%);--gg:linear-gradient(135deg,#7dc0ff 0%,#4f8cff 100%);--ge:linear-gradient(135deg,#5ac8fa 0%,#258bd8 100%);--gv:linear-gradient(135deg,#72a7ff 0%,#3f6fe5 100%)}
@@ -1349,82 +1349,9 @@ let translateAbortController=null;
 async function fetchTranslateProvider(sl,tl,text,mode='translate'){const key=sl+'|'+tl+'|'+mode+'|'+normalizeTranslateKey(text);const cached=getTranslateCache(key);if(cached)return cached;if(translateAbortController)try{translateAbortController.abort()}catch(e){}translateAbortController=new AbortController();const signal=translateAbortController.signal;const endpoints=mode==='romaji'?['/api/translate?mode=romaji&sl=ja&tl=en&q='+encodeURIComponent(text)]:['/api/translate?mode=translate&sl='+encodeURIComponent(sl)+'&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(text),'https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(sl)+'&tl='+encodeURIComponent(tl)+'&dt=t&q='+encodeURIComponent(text),'https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+encodeURIComponent(sl+'|'+tl)];for(const url of endpoints){try{const r=await fetch(url,{headers:{accept:'application/json'},signal});if(!r.ok)continue;const d=await r.json();let v=mode==='romaji'?d.romaji:(d.translatedText||d.responseData?.translatedText||'');if(!v&&mode!=='romaji'&&Array.isArray(d?.[0]))v=d[0].map(x=>x?.[0]||'').join('');v=String(v||'').trim();if(v){setTranslateCache(key,v);return v}}catch(e){if(e?.name==='AbortError')throw e}}return ''}
 function findLocalTranslation(input,isJp){const clean=cleanJp(input),key=normalizeTranslateKey(input);if(isJp){const e=dbFind(clean)||entryForJapanese(clean);const id=localWordMeaning[clean]||e?.meaning||'';if(id)return {jp:clean,id,e};const p=Object.keys(JP_PHRASE_READINGS).find(k=>normalizeTranslateKey(k)===key);if(p)return {jp:p,id:localWordMeaning[p]||'',e:entryForJapanese(p)}}else{const direct=ID_TO_JP[key];if(direct)return {jp:direct,id:localWordMeaning[direct]||dbFind(direct)?.meaning||'',e:dbFind(direct)||entryForJapanese(direct)};const e=LEARNING_DB.find(x=>normalizeTranslateKey(x.meaning).split(/[;,/]/).some(v=>v.trim()===key)||normalizeTranslateKey(x.meaning)===key);if(e)return {jp:e.japanese,id:e.meaning,e};const p=Object.entries(localWordMeaning).find(([jp,id])=>normalizeTranslateKey(id)===key);if(p)return {jp:p[0],id:p[1],e:dbFind(p[0])||entryForJapanese(p[0])}}return null}
 let currentTranslationState=null;
-async function ensureRomaji(jp){
-  const clean=String(jp||'').trim(); if(!clean)return '';
-  const local=findLocalRomaji(clean);
-  // For complete sentences, prefer the provider's full romanization first.
-  // The local dictionary is the fallback for offline/common vocabulary.
-  if(clean.length>18 || /[\u3400-\u9fff]/.test(clean)){
-    const apiRomaji=await fetchTranslateProvider('ja','en',clean,'romaji');
-    if(romajiIsLatin(apiRomaji)){ const r=normalizeRomajiOutput(apiRomaji); if(r)return r; }
-  }
-  if(local)return local;
-  const apiRomaji=await fetchTranslateProvider('ja','en',clean,'romaji');
-  if(romajiIsLatin(apiRomaji)){const r=normalizeRomajiOutput(apiRomaji);if(r)return r;}
-  return normalizeRomajiOutput(smartRomaji(clean));
-}
-
-/* ===== Polite translation layer =====
-   Indonesian -> Japanese results are normalized to a natural polite register.
-   We keep the formality detector/variants so the learner can still see the level.
-*/
-function extractPersonName(input){
-  const m=String(input||'').match(/(?:nama saya|namaku|saya bernama)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' .-]{1,40}?)(?:\s+(?:saya|dan|dari|asal)|$)/i);
-  return m?m[1].trim().replace(/[.!,]+$/,''):'';
-}
-function politeIndonesianToJapanese(input,jp){
-  const raw=String(input||'').trim();
-  const key=normalizeTranslateKey(raw);
-  const name=extractPersonName(raw);
-  const intro=/^(?:halo|hallo)[, ]*(?:perkenalkan(?:lah)?|kenalkan)?(?:[ ,]+nama saya|[ ,]+saya bernama|[ ,]+namaku)?/i.test(raw) && /nama saya|saya bernama|namaku/i.test(raw);
-  if(intro && /indonesia/i.test(raw)){
-    const safeName=name||'—';
-    return `こんにちは、はじめまして。私の名前は${safeName}です。インドネシアから来ました。`;
-  }
-  const exact={
-    'halo':'こんにちは。','hallo':'こんにちは。','selamat pagi':'おはようございます。','selamat siang':'こんにちは。','selamat malam':'こんばんは。','selamat tidur':'おやすみなさい。','terima kasih':'ありがとうございます。','maaf':'申し訳ありません。','permisi':'すみません。','salam kenal':'はじめまして。','apa kabar':'お元気ですか。','saya baik':'元気です。','tidak apa-apa':'大丈夫です。','saya mengerti':'わかりました。','saya tidak mengerti':'わかりません。','saya tidak tahu':'わかりません。','tolong':'お願いします。','tolong bantu saya':'手伝っていただけますか。','di mana toiletnya':'トイレはどこですか。','berapa harganya':'いくらですか。','saya suka bahasa jepang':'日本語が好きです。','saya belajar bahasa jepang':'日本語を勉強しています。','saya tinggal di indonesia':'インドネシアに住んでいます。','saya pergi dulu':'失礼します。'
-  };
-  if(exact[key]) return exact[key];
-  return jp;
-}
-function makePoliteJapanese(jp){
-  let t=String(jp||'').trim(); if(!t)return t;
-  t=t.replace(/(^|[。！？!?])\s*(こんにちは、\s*)?はじめまして[。！？!?]?/g,(m,p)=>p+'こんにちは、はじめまして。');
-  // Common plain forms -> polite forms. Only apply unambiguous high-frequency verbs/phrases.
-  const rules=[
-    [/\b食べる([。！？!?]|$)/g,'食べます$1'],[/\b飲む([。！？!?]|$)/g,'飲みます$1'],[/\b行く([。！？!?]|$)/g,'行きます$1'],[/\b来る([。！？!?]|$)/g,'来ます$1'],[/\b見る([。！？!?]|$)/g,'見ます$1'],[/\b読む([。！？!?]|$)/g,'読みます$1'],[/\b書く([。！？!?]|$)/g,'書きます$1'],[/\b話す([。！？!?]|$)/g,'話します$1'],[/\b買う([。！？!?]|$)/g,'買います$1'],[/\b会う([。！？!?]|$)/g,'会います$1'],[/\b作る([。！？!?]|$)/g,'作ります$1'],[/\b使う([。！？!?]|$)/g,'使います$1'],[/\b働く([。！？!?]|$)/g,'働きます$1'],[/\b帰る([。！？!?]|$)/g,'帰ります$1'],[/\b寝る([。！？!?]|$)/g,'寝ます$1'],[/\b起きる([。！？!?]|$)/g,'起きます$1'],[/\b大丈夫だ([。！？!?]|$)/g,'大丈夫です$1'],[/\b好きだ([。！？!?]|$)/g,'好きです$1']
-  ];
-  for(const [re,repl] of rules)t=t.replace(re,repl);
-  t=t.replace(/です\s*です/g,'です').replace(/ます\s*ます/g,'ます');
-  return t;
-}
+async function ensureRomaji(jp){const local=findLocalRomaji(jp);if(local)return local;const apiRomaji=await fetchTranslateProvider('ja','en',jp,'romaji');return romajiIsLatin(apiRomaji)?normalizeRomajiOutput(apiRomaji):''}
 function showTranslationResult(jp,id,original,entry,romajiOverride){const clean=String(jp||'').trim(),e=entry||dbFind(clean)||entryForJapanese(clean),romaji=romajiOverride||findLocalRomaji(clean)||'';const formality=detectPoliteness(clean,e);currentTranslationState={jp:clean,id:String(id||''),romaji,originalText:original,entry:e,formality};document.getElementById('resultMain').textContent=clean;const romajiEl=document.getElementById('resultRomaji');romajiEl.textContent=romaji||'Bacaan belum tersedia';romajiEl.classList.toggle('romaji-unavailable',!romaji);document.getElementById('resultMeaning').textContent=id||'—';renderTranslateDetails(e,formality,clean,id);const resultBox=document.getElementById('translateResult');resultBox.classList.add('show');resultBox.setAttribute('data-speak',clean);const exact=formalityDict[clean],formalityBox=document.getElementById('formalityBox');if(exact){renderFormality(exact);formalityBox.classList.add('show')}else formalityBox.classList.remove('show');addToHistory({jp:clean,romaji:romaji||'—',id,originalText:original});setTimeout(()=>speak(clean),120);return currentTranslationState}
-async function doTranslate(){
- const input=document.getElementById('translateInput').value.trim(); if(!input)return;
- const btn=document.getElementById('translateBtn'),resultBox=document.getElementById('translateResult'),notFoundBox=document.getElementById('translateNotFound'),formalityBox=document.getElementById('formalityBox');
- if(btn.disabled)return; btn.disabled=true; const old=btn.textContent; btn.textContent='⏳ Menerjemahkan…';
- resultBox.classList.remove('show'); notFoundBox.classList.remove('show'); formalityBox.classList.remove('show');
- try{
-   const isJp=isJapaneseText(input), local=findLocalTranslation(input,isJp);
-   if(local&&local.jp&&local.id){
-     let jp=local.jp;
-     if(!isJp) jp=politeIndonesianToJapanese(input,jp);
-     else jp=makePoliteJapanese(jp);
-     let id=local.id; if(!id && !isJp) id=input;
-     const r=await ensureRomaji(jp);
-     showTranslationResult(jp,id,input,null,r); return;
-   }
-   if(isJp){
-     const id=await fetchTranslateProvider('ja','id',input);
-     if(id){ const jp=makePoliteJapanese(input); const r=await ensureRomaji(jp); showTranslationResult(jp,id,input,null,r); return; }
-   }else{
-     const rawJp=await fetchTranslateProvider('id','ja',input);
-     if(rawJp){ const jp=politeIndonesianToJapanese(input,rawJp); const r=await ensureRomaji(jp); showTranslationResult(jp,input,input,null,r); return; }
-   }
-   notFoundBox.classList.add('show');
- }catch(e){ if(e?.name!=='AbortError')notFoundBox.classList.add('show'); }
- finally{btn.disabled=false;btn.textContent=old;}
-}
+async function doTranslate(){const input=document.getElementById('translateInput').value.trim();if(!input)return;const btn=document.getElementById('translateBtn'),resultBox=document.getElementById('translateResult'),notFoundBox=document.getElementById('translateNotFound'),formalityBox=document.getElementById('formalityBox');if(btn.disabled)return;btn.disabled=true;const old=btn.textContent;btn.textContent='⏳ Menerjemahkan…';resultBox.classList.remove('show');notFoundBox.classList.remove('show');formalityBox.classList.remove('show');try{const isJp=isJapaneseText(input),local=findLocalTranslation(input,isJp);if(local&&local.jp&&local.id){let r=local.e?.romaji||findLocalRomaji(local.jp);if(!r)r=await ensureRomaji(local.jp);showTranslationResult(local.jp,local.id,input,local.e,r);return}if(isJp){const id=await fetchTranslateProvider('ja','id',input);if(id){const r=await ensureRomaji(input);showTranslationResult(input,id,input,null,r);return}}else{const jp=await fetchTranslateProvider('id','ja',input);if(jp){const r=await ensureRomaji(jp);showTranslationResult(jp,input,input,null,r);return}}notFoundBox.classList.add('show')}catch(e){if(e?.name!=='AbortError')notFoundBox.classList.add('show')}finally{btn.disabled=false;btn.textContent=old}}
 function addToHistory(entry) {
   let h = JSON.parse(localStorage.getItem('translate_history_v19') || '[]');
   h = h.filter(x => x.originalText !== entry.originalText);
