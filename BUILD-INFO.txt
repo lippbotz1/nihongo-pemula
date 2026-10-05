@@ -1,0 +1,3 @@
+Nihongo Premium — Presence/Admin Login Status update
+
+Admin now shows whether each premium user is currently online, based on Firebase Realtime Database presence with onDisconnect cleanup and 20-second heartbeat.

@@ -2,14 +2,22 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "nihongo_public": {
-      ".read": true,
-      ".write": false
-    },
     "licenses": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": false
+      }
+    },
+    "presence": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "device_lock": {
+      "$emailKey": {
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     }
   }

@@ -1,8 +1,7 @@
 {
   "functions": {
     "api/translate.js": {"maxDuration": 10},
-    "api/admin-users.js": {"maxDuration": 10},
-    "api/premium-content.js": {"maxDuration": 10}
+    "api/admin-users.js": {"maxDuration": 10}
   },
   "headers": [
     {"source":"/(.*)","headers":[
