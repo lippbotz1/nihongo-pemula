@@ -745,21 +745,97 @@ function getDeviceName() { const ua = navigator.userAgent; let b = 'Browser'; if
 async function checkDeviceLock(email) { if (!firebaseDB) return { ok: true }; try { const deviceId = getDeviceId(); const key = email.replace(/\./g, ','); const snap = await firebaseDB.ref('device_lock/' + key).once('value'); const data = snap.val(); if (!data || !data.deviceId || data.deviceId === deviceId) return { ok: true }; return { ok: false, msg: 'Akun ini sedang aktif di perangkat lain (' + (data.deviceName || 'unknown') + '). Logout dari perangkat tersebut atau hubungi admin untuk reset.' }; } catch (e) { return { ok: true }; } }
 async function setDeviceLock(email) { if (!firebaseDB) return; try { const key = email.replace(/\./g, ','); await firebaseDB.ref('device_lock/' + key).set({ deviceId: getDeviceId(), deviceName: getDeviceName(), loginAt: Date.now() }); } catch (e) {} }
 async function clearDeviceLock(email) { if (!firebaseDB) return; try { const key = email.replace(/\./g, ','); const snap = await firebaseDB.ref('device_lock/' + key).once('value'); const data = snap.val(); if (!data || data.deviceId === getDeviceId()) await firebaseDB.ref('device_lock/' + key).remove(); } catch (e) {} }
+let loginHistoryRef = null;
+async function recordLogin(user) {
+  if (!firebaseDB || !user || !user.uid) return;
+  try {
+    loginHistoryRef = firebaseDB.ref('login_history/' + user.uid);
+    await loginHistoryRef.transaction(v => ({
+      hasLoggedIn: true,
+      firstLoginAt: v && v.firstLoginAt ? v.firstLoginAt : firebase.database.ServerValue.TIMESTAMP,
+      lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
+      email: user.email || (v && v.email) || ''
+    }));
+  } catch(e) { console.warn('Login history:', e); }
+}
+let presenceTimer = null;
+let presenceRef = null;
+let presenceConnectedRef = null;
+async function setPresence(user) {
+  if (!firebaseDB || !user || !user.uid) return;
+  try {
+    if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+    presenceRef = firebaseDB.ref('presence/' + user.uid);
+    const connectedRef = firebaseDB.ref('.info/connected');
+    presenceConnectedRef = connectedRef;
+    const onlineData = {
+      online: true,
+      email: user.email || '',
+      deviceId: getDeviceId(),
+      deviceName: getDeviceName(),
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
+    };
+    const offlineData = {
+      online: false,
+      email: user.email || '',
+      deviceId: getDeviceId(),
+      deviceName: getDeviceName(),
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
+    };
+    await presenceRef.onDisconnect().set(offlineData);
+    await presenceRef.set(onlineData);
+    connectedRef.on('value', snap => {
+      if (snap.val() === true && presenceRef && currentUser && currentUser.uid === user.uid) {
+        presenceRef.onDisconnect().set(offlineData).catch(() => {});
+        presenceRef.update({online:true, lastSeen:firebase.database.ServerValue.TIMESTAMP}).catch(() => {});
+      }
+    });
+    presenceTimer = setInterval(() => {
+      if (presenceRef && currentUser && currentUser.uid === user.uid) {
+        presenceRef.update({online:true, lastSeen:firebase.database.ServerValue.TIMESTAMP}).catch(() => {});
+      }
+    }, 15000);
+  } catch (e) {
+    console.warn('Presence error:', e);
+  }
+}
+async function clearPresence() {
+  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+  try { if (presenceConnectedRef) presenceConnectedRef.off(); } catch (e) {}
+  presenceConnectedRef = null;
+  if (!firebaseDB || !currentUser || !currentUser.uid) return;
+  try {
+    const ref = firebaseDB.ref('presence/' + currentUser.uid);
+    await ref.onDisconnect().cancel();
+    await ref.update({online:false, lastSeen:firebase.database.ServerValue.TIMESTAMP});
+  } catch (e) {}
+}
 let deviceWatcherTimer = null;
 let licenseWatcherTimer = null;
 let currentUser = null;
 let currentLicense = null;
 let firebaseAuth = null;
-try { if (typeof firebase !== 'undefined' && firebase.auth) firebaseAuth = firebase.auth(); } catch (e) { console.warn('Firebase Auth init:', e); }
+let authPersistenceReady = Promise.resolve();
+try {
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebaseAuth = firebase.auth();
+    // PENTING: sesi login harus disimpan di browser.
+    // Dengan LOCAL, refresh/tutup-buka website tidak meminta login lagi.
+    authPersistenceReady = firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => console.log('✅ Firebase Auth persistence: LOCAL'))
+      .catch(e => { console.warn('Auth persistence LOCAL gagal:', e); });
+  }
+} catch (e) { console.warn('Firebase Auth init:', e); }
 function getLicenseActive(lic) { if (!lic || lic.active === false) return false; const exp = lic.expiresAt ? Number(lic.expiresAt) : null; return !exp || exp > Date.now(); }
 async function loadLicense(user) { if (!firebaseDB || !user) return null; try { const snap = await firebaseDB.ref('licenses/' + user.uid).once('value'); const lic = snap.val(); if (!lic) return null; const expiresAt = lic.expiresAt ? Number(lic.expiresAt) : null; return { ...lic, expiresAt, email: user.email || lic.email || '', uid: user.uid, active: lic.active !== false && (!expiresAt || expiresAt > Date.now()) }; } catch (e) { console.warn('License load:', e); return null; } }
-function stopWatchers() { if (deviceWatcherTimer) { clearInterval(deviceWatcherTimer); deviceWatcherTimer = null; } if (licenseWatcherTimer) { clearInterval(licenseWatcherTimer); licenseWatcherTimer = null; } }
-function startDeviceWatcher(email) { if (!firebaseDB || !email) return; if (deviceWatcherTimer) clearInterval(deviceWatcherTimer); const deviceId = getDeviceId(); deviceWatcherTimer = setInterval(async () => { try { const key = email.replace(/\./g, ','); const snap = await firebaseDB.ref('device_lock/' + key).once('value'); const data = snap.val(); if (!data || data.deviceId !== deviceId) { if (currentUser && currentUser.email === email) { alert('⚠️ Sesi berakhir.'); stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); } } } catch (e) {} }, 30000); }
-function startLicenseWatcher() { if (licenseWatcherTimer) clearInterval(licenseWatcherTimer); licenseWatcherTimer = setInterval(async () => { if (!currentUser) return; const lic = await loadLicense(currentUser); if (!getLicenseActive(lic)) { stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); alert('⚠️ Lisensi Premium sudah tidak aktif atau kedaluwarsa.'); } else { currentLicense = lic; if (document.getElementById('pengaturan')?.classList.contains('active')) renderAkun(); } }, 15000); }
+function stopWatchers() { if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; } if (deviceWatcherTimer) { clearInterval(deviceWatcherTimer); deviceWatcherTimer = null; } if (licenseWatcherTimer) { clearInterval(licenseWatcherTimer); licenseWatcherTimer = null; } }
+function startDeviceWatcher(email) { if (!firebaseDB || !email) return; if (deviceWatcherTimer) clearInterval(deviceWatcherTimer); const deviceId = getDeviceId(); deviceWatcherTimer = setInterval(async () => { try { const key = email.replace(/\./g, ','); const snap = await firebaseDB.ref('device_lock/' + key).once('value'); const data = snap.val(); if (!data || data.deviceId !== deviceId) { if (currentUser && currentUser.email === email) { alert('⚠️ Sesi berakhir.'); await clearPresence(); stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); } } } catch (e) {} }, 30000); }
+function startLicenseWatcher() { if (licenseWatcherTimer) clearInterval(licenseWatcherTimer); licenseWatcherTimer = setInterval(async () => { if (!currentUser) return; const lic = await loadLicense(currentUser); if (!getLicenseActive(lic)) { await clearPresence(); stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); alert('⚠️ Lisensi Premium sudah tidak aktif atau kedaluwarsa.'); } else { currentLicense = lic; if (document.getElementById('pengaturan')?.classList.contains('active')) renderAkun(); } }, 15000); }
 function isLoggedIn() { return !!currentUser && getLicenseActive(currentLicense); }
 async function login(email, password) {
   try {
     if (!firebaseAuth) return { ok: false, msg: 'Firebase Auth belum tersedia.' };
+    await authPersistenceReady;
     const cred = await firebaseAuth.signInWithEmailAndPassword(String(email).trim(), String(password));
     const lic = await loadLicense(cred.user);
     if (!lic) { await firebaseAuth.signOut(); return { ok: false, msg: 'Akun belum memiliki lisensi Premium.' }; }
@@ -769,6 +845,8 @@ async function login(email, password) {
     await setDeviceLock(cred.user.email);
     currentUser = cred.user;
     currentLicense = lic;
+    await recordLogin(currentUser);
+    await setPresence(currentUser);
     startDeviceWatcher(cred.user.email);
     startLicenseWatcher();
     return { ok: true, account: lic };
@@ -778,25 +856,50 @@ async function login(email, password) {
     return { ok: false, msg };
   }
 }
-async function logout() { const email = currentUser && currentUser.email; stopWatchers(); if (email) await clearDeviceLock(email); try { if (firebaseAuth) await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); }
+async function logout() { const email = currentUser && currentUser.email; await clearPresence(); stopWatchers(); if (email) await clearDeviceLock(email); try { if (firebaseAuth) await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); }
 function showGate() { document.getElementById('premiumGate').style.display = 'flex'; document.getElementById('mainApp').classList.add('blurred'); }
 function showApp() { document.getElementById('premiumGate').style.display = 'none'; document.getElementById('mainApp').classList.remove('blurred'); renderAkun(); }
 async function checkAutoLogin() {
+  // Firebase Auth LOCAL adalah sumber sesi yang sebenarnya. Jangan pernah
+  // meminta password ulang hanya karena halaman baru selesai dimuat.
   showGate();
   if (!firebaseAuth) return;
   try {
+    await authPersistenceReady;
     await new Promise(resolve => {
-      let done = false;
+      let finished = false;
+      const finish = () => { if (!finished) { finished = true; resolve(); } };
       const unsub = firebaseAuth.onAuthStateChanged(async user => {
-        if (done) return;
-        done = true; unsub();
-        if (!user) return resolve();
-        const lic = await loadLicense(user);
-        if (!getLicenseActive(lic)) { try { await firebaseAuth.signOut(); } catch (e) {} return resolve(); }
-        const lockCheck = await checkDeviceLock(user.email);
-        if (!lockCheck.ok) { try { await firebaseAuth.signOut(); } catch (e) {} setTimeout(() => alert('⚠️ ' + lockCheck.msg), 250); return resolve(); }
-        currentUser = user; currentLicense = lic; await setDeviceLock(user.email); startDeviceWatcher(user.email); startLicenseWatcher(); showApp(); resolve();
+        try {
+          if (!user) { finish(); return; }
+          const lic = await loadLicense(user);
+          if (!getLicenseActive(lic)) {
+            try { await firebaseAuth.signOut(); } catch (e) {}
+            finish(); return;
+          }
+          const lockCheck = await checkDeviceLock(user.email);
+          if (!lockCheck.ok) {
+            try { await firebaseAuth.signOut(); } catch (e) {}
+            setTimeout(() => alert('⚠️ ' + lockCheck.msg), 250);
+            finish(); return;
+          }
+          currentUser = user;
+          currentLicense = lic;
+          // Sesi dipulihkan otomatis; ini BUKAN login ulang.
+          await setDeviceLock(user.email);
+          await setPresence(user);
+          startDeviceWatcher(user.email);
+          startLicenseWatcher();
+          showApp();
+        } catch (e) {
+          console.warn('Pemulihan sesi:', e);
+        } finally {
+          try { unsub(); } catch (e) {}
+          finish();
+        }
       });
+      // Safety timeout: jangan menggantung di layar login jika Firebase lambat.
+      setTimeout(finish, 12000);
     });
   } catch (e) { console.warn('Auto login:', e); }
 }
