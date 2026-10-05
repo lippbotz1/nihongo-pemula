@@ -79,6 +79,23 @@ function parseRomanization(data) {
   return '';
 }
 
+
+function politeJapanese(input, translated) {
+  const raw = String(input || '').trim();
+  const out = String(translated || '').trim();
+  const low = raw.toLowerCase();
+  const nameMatch = raw.match(/(?:nama\s+saya|nama\s+ku|saya\s+bernama)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,40}?)(?=\s+(?:saya|aku)\s+(?:dari|asal)|\s*$)/i);
+  const countryMatch = raw.match(/(?:saya|aku)\s+(?:berasal\s+dari|dari|asal(?:nya)?\s+dari)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ -]{1,40})/i);
+  if (/(?:halo|hai|selamat\s+(?:pagi|siang|sore|malam))/.test(low) &&
+      /(?:perkenalkan|kenalkan|nama\s+saya|bernama)/.test(low) &&
+      nameMatch && countryMatch) {
+    const country = countryMatch[1].trim().toLowerCase().includes('indonesia') ? 'インドネシア' : countryMatch[1].trim();
+    return 'こんにちは、はじめまして。私の名前は' + nameMatch[1].trim() + 'です。' + country + 'から来ました。';
+  }
+  return out.replace(/こんにちは、自己紹介させてください。?/g,'こんにちは、はじめまして。')
+    .replace(/自己紹介させてください。?/g,'はじめまして。');
+}
+
 function sendJson(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
@@ -167,8 +184,9 @@ async function handler(req, res) {
       return sendJson(res, 502, { error: 'translation_unavailable' });
     }
 
-    cacheSet(key, translated);
-    return sendJson(res, 200, { translatedText: translated });
+    const polished = (sl === 'id' && tl === 'ja') ? politeJapanese(q, translated) : translated;
+    cacheSet(key, polished);
+    return sendJson(res, 200, { translatedText: polished });
   } catch (error) {
     return sendJson(res, 502, { error: 'translation_service_unavailable' });
   }
