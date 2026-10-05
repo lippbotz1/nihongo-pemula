@@ -1372,7 +1372,12 @@ const ID_TO_JP={
 };
 const ROMAJI_NAME_MAP={'アリーフ':'Arief','アリフ':'Arief','インドネシア':'Indonesia'};
 function normalizeRomajiOutput(text){
- let out=String(text||'').replace(/[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/g,'').replace(/[ \t]+/g,' ').trim();
+ let out=String(text||'')
+   .replace(/[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/g,'')
+   .replace(/[、。！？「」『』【】〔〕〈〉《》・]/g,' ')
+   .replace(/[，．]/g, m => m === '，' ? ',' : '.')
+   .replace(/\u3000/g,' ')
+   .replace(/[ \t\r\n]+/g,' ').trim();
  out=out.replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])(?=\S)/g,'$1 ');
  out=out.replace(/\bha\b/gi,'wa').replace(/\bhe\b/gi,'e').replace(/\bwo\b/gi,'o');
  if(out){out=out.charAt(0).toUpperCase()+out.slice(1);out=out.replace(/([.!?]\s+)([a-z])/g,(m,p,c)=>p+c.toUpperCase())}
