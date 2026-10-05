@@ -24,14 +24,18 @@ body>*{position:relative;z-index:1}
 .gate-features{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;text-align:left}
 .gate-feature{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-soft);padding:8px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)}
 .gate-feature .check{width:18px;height:18px;border-radius:50%;background:var(--ge);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:900;flex-shrink:0}
-.price-table{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
-.price-table-header{background:rgba(94,167,255,.1);padding:10px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#7dc0ff}
-.price-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer}
-.price-row.selected{background:rgba(94,167,255,.10);border-left:3px solid var(--indigo)}
-.price-info{text-align:left;flex:1}
+.price-table{width:100%;box-sizing:border-box;background:rgba(255,255,255,.025);border:1px solid var(--border-bright);border-radius:18px;overflow:hidden;margin:0 0 16px;padding:0}
+.price-table-header{width:100%;box-sizing:border-box;background:rgba(94,167,255,.12);padding:12px 10px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#7dc0ff;text-align:center;border:0;margin:0}
+.price-row{width:100%;max-width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;padding:14px 18px;border:0;border-bottom:1px solid var(--border);cursor:pointer;position:relative;min-height:78px;transform:none!important;border-radius:0!important;overflow:hidden}
+.price-row:last-child{border-bottom:0}
+.price-row.selected{background:rgba(94,167,255,.105);box-shadow:inset 3px 0 0 var(--indigo),inset -3px 0 0 rgba(94,167,255,.18);filter:none}
+.price-row.selected::after{content:"✓ Dipilih";position:absolute;left:10px;top:7px;border-radius:999px;padding:2px 6px;background:var(--gp);color:#081224;font-size:7px;font-weight:900;letter-spacing:.25px;opacity:.95;pointer-events:none}
+.price-info{text-align:left;flex:1;min-width:0;padding-left:0}
 .price-duration{font-size:13px;font-weight:800}
-.price-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
-.price-amount{font-size:17px;font-weight:900;color:#7dc0ff}.price-original{font-size:12px;color:var(--text-dim);text-decoration:line-through;margin-bottom:2px}.price-final{font-size:17px;font-weight:900;color:#7dc0ff}.price-discount-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(94,167,255,.14);color:#7dc0ff;font-size:9px;font-weight:800}
+.price-desc{font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.45}
+.price-amount{flex:0 0 auto;min-width:112px;text-align:right;font-size:17px;font-weight:900;color:#7dc0ff}
+.price-original{font-size:12px;color:var(--text-dim);text-decoration:line-through;margin-bottom:2px;white-space:nowrap}.price-final{font-size:17px;font-weight:900;color:#7dc0ff;white-space:nowrap}.price-discount-badge{display:inline-block;margin:4px 0 0 6px;padding:2px 6px;border-radius:999px;background:#22c55e;color:#07130d;font-size:9px;font-weight:800}
+@media (max-width:420px){.price-row{padding:14px 16px;gap:10px;min-height:76px}.price-amount{min-width:105px}.price-final{font-size:16px}.price-duration{font-size:13px}.price-desc{font-size:10.5px}}
 .btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;background:linear-gradient(135deg,#4f8cff 0%,#258bd8 100%);color:#fff;border:none;border-radius:100px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;text-transform:uppercase;text-decoration:none;margin-bottom:10px;box-shadow:0 8px 24px rgba(79,140,255,.35)}
 .btn-login-link{width:100%;background:none;border:1px solid var(--border-bright);color:var(--text-soft);padding:12px;border-radius:100px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .reviews-section{background:linear-gradient(145deg,rgba(20,28,48,.98),rgba(15,20,36,.98));border:1px solid var(--border-bright);border-radius:20px;padding:20px;margin-bottom:16px}
@@ -242,6 +246,18 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 @keyframes learningCardFloat{0%{transform:translateY(0) scale(1)}45%{transform:translateY(-9px) scale(1.018)}100%{transform:translateY(-6px) scale(1.012)}}
 .vocab-item.tap-flash,.quiz-option.tap-flash,.flashcard.tap-flash,.grammar-box.tap-flash,.kana-item.tap-flash,.kanji-item.tap-flash,.phrase-row.tap-flash,.formality-item.tap-flash{animation:learningCardFloat .34s ease-out both}
 @media(max-width:640px){.tabs{top:8px;margin:8px auto 16px;padding:5px;gap:4px}.tab-btn{padding:8px 12px;font-size:11.5px}.container{padding:22px 14px}.lesson-card{padding:18px 16px}.kana-grid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px}.kana-char{font-size:22px}.kanji-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}.kanji-char{font-size:24px}.phrase-row{flex-direction:column;align-items:flex-start;gap:3px}.quiz-options{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}.upgrade-grid{grid-template-columns:1fr 1fr}.voice-main-btn{width:48px;height:48px;font-size:20px}.gate-card{padding:24px 18px}header.hero{padding:36px 18px 32px}header.hero::before{font-size:120px}}
+
+/* ===== PREMIUM PRICE BOX ALIGNMENT FIX ===== */
+/* Harga tetap mengikuti garis kotak; kartu pembelajaran lain tetap boleh mengambang. */
+.price-row.is-selected,.price-row.selected{
+  transform:none!important;
+  scale:none!important;
+  border-radius:0!important;
+  filter:none!important;
+}
+.price-table,.price-table *{
+  box-sizing:border-box;
+}
 
 /* ===== LEARNING TAP FLOAT v2 ===== */
 .kana-item,.kanji-item,.phrase-row,.formality-item,.vocab-item,.quiz-option,.grammar-box,.flashcard,.task,.price-row{
