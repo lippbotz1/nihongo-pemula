@@ -249,11 +249,13 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 
 /* ===== PREMIUM PRICE BOX ALIGNMENT FIX ===== */
 /* Harga tetap mengikuti garis kotak; kartu pembelajaran lain tetap boleh mengambang. */
-.price-row.is-selected,.price-row.selected{
+.price-row.is-selected,.price-row.selected,.price-row.tap-ripple,.price-row.tap-flash{
   transform:none!important;
   scale:none!important;
   border-radius:0!important;
   filter:none!important;
+  animation:none!important;
+  box-shadow:none!important;
 }
 .price-table,.price-table *{
   box-sizing:border-box;
@@ -266,7 +268,7 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 }
 .kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.formality-item.is-selected,
 .vocab-item.is-selected,.quiz-option.is-selected,.grammar-box.is-selected,.flashcard.is-selected,
-.task.is-selected,.price-row.selected{
+.task.is-selected{
   transform:translateY(-8px) scale(1.025)!important;
   filter:brightness(1.08);
 }
@@ -276,7 +278,7 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
   content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
   box-shadow:0 0 0 2px rgba(77,200,255,.16),0 0 24px rgba(77,200,255,.18);
 }
-.tap-ripple{animation:learningTapRipple .42s ease-out both!important}
+.kana-item.tap-ripple,.kanji-item.tap-ripple,.phrase-row.tap-ripple,.formality-item.tap-ripple,.vocab-item.tap-ripple,.quiz-option.tap-ripple,.grammar-box.tap-ripple,.flashcard.tap-ripple,.task.tap-ripple{animation:learningTapRipple .42s ease-out both!important}
 @keyframes learningTapRipple{0%{transform:translateY(-1px) scale(.99)}45%{transform:translateY(-10px) scale(1.035)}100%{transform:translateY(-8px) scale(1.025)}}
 
 /* ===== FINAL MOBILE UI/UX PATCH — Dashboard + Pengaturan ===== */
