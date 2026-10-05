@@ -243,6 +243,26 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 .vocab-item.tap-flash,.quiz-option.tap-flash,.flashcard.tap-flash,.grammar-box.tap-flash,.kana-item.tap-flash,.kanji-item.tap-flash,.phrase-row.tap-flash,.formality-item.tap-flash{animation:learningCardFloat .34s ease-out both}
 @media(max-width:640px){.tabs{top:8px;margin:8px auto 16px;padding:5px;gap:4px}.tab-btn{padding:8px 12px;font-size:11.5px}.container{padding:22px 14px}.lesson-card{padding:18px 16px}.kana-grid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px}.kana-char{font-size:22px}.kanji-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}.kanji-char{font-size:24px}.phrase-row{flex-direction:column;align-items:flex-start;gap:3px}.quiz-options{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}.upgrade-grid{grid-template-columns:1fr 1fr}.voice-main-btn{width:48px;height:48px;font-size:20px}.gate-card{padding:24px 18px}header.hero{padding:36px 18px 32px}header.hero::before{font-size:120px}}
 
+/* ===== LEARNING TAP FLOAT v2 ===== */
+.kana-item,.kanji-item,.phrase-row,.formality-item,.vocab-item,.quiz-option,.grammar-box,.flashcard,.task,.price-row{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.formality-item.is-selected,
+.vocab-item.is-selected,.quiz-option.is-selected,.grammar-box.is-selected,.flashcard.is-selected,
+.task.is-selected,.price-row.selected{
+  transform:translateY(-8px) scale(1.025)!important;
+  filter:brightness(1.08);
+}
+.kana-item.is-selected::before,.kanji-item.is-selected::before,.phrase-row.is-selected::before,
+.formality-item.is-selected::before,.vocab-item.is-selected::before,.quiz-option.is-selected::before,
+.grammar-box.is-selected::before,.flashcard.is-selected::before{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 2px rgba(77,200,255,.16),0 0 24px rgba(77,200,255,.18);
+}
+.tap-ripple{animation:learningTapRipple .42s ease-out both!important}
+@keyframes learningTapRipple{0%{transform:translateY(-1px) scale(.99)}45%{transform:translateY(-10px) scale(1.035)}100%{transform:translateY(-8px) scale(1.025)}}
+
 /* ===== FINAL MOBILE UI/UX PATCH — Dashboard + Pengaturan ===== */
 html,body{width:100%;max-width:100%;overflow-x:hidden}
 body{min-width:0}
@@ -974,19 +994,21 @@ document.addEventListener('click', e => { const vt = document.querySelector('.vo
 
 let lastSpeakTime = 0;
 document.body.addEventListener('click', e => {
-  const el = e.target.closest('[data-speak],.kana-item,.kanji-item,.phrase-row,.grammar-box,.formality-item,.vocab-item,.quiz-option,.flashcard');
-  if (!el) return;
-  const selectable = el.closest('.kana-item,.kanji-item,.phrase-row,.grammar-box,.formality-item,.vocab-item,.quiz-option,.flashcard') || el;
-  document.querySelectorAll('.kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.grammar-box.is-selected,.formality-item.is-selected,.vocab-item.is-selected,.quiz-option.is-selected,.flashcard.is-selected').forEach(x => {
-    if (x !== selectable) { x.classList.remove('is-selected','tap-flash'); x.setAttribute('aria-pressed','false'); }
-  });
-  selectable.classList.remove('tap-flash');
-  void selectable.offsetWidth;
-  selectable.classList.add('is-selected','tap-flash');
-  selectable.setAttribute('aria-pressed','true');
-  setTimeout(() => selectable.classList.remove('tap-flash'), 450);
-  const speakEl = el.closest('[data-speak]') || el;
-  const text = speakEl.getAttribute ? speakEl.getAttribute('data-speak') : '';
+  const selectable = e.target.closest('.kana-item,.kanji-item,.phrase-row,.grammar-box,.formality-item,.vocab-item,.quiz-option,.flashcard,.task,.price-row');
+  const speakEl = e.target.closest('[data-speak]');
+  if (!selectable && !speakEl) return;
+  if (selectable) {
+    document.querySelectorAll('.kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.grammar-box.is-selected,.formality-item.is-selected,.vocab-item.is-selected,.quiz-option.is-selected,.flashcard.is-selected,.task.is-selected,.price-row.selected').forEach(x => {
+      if (x !== selectable) { x.classList.remove('is-selected','tap-flash','tap-ripple'); x.setAttribute('aria-pressed','false'); }
+    });
+    selectable.classList.remove('tap-flash','tap-ripple');
+    void selectable.offsetWidth;
+    selectable.classList.add('is-selected','tap-flash','tap-ripple');
+    selectable.setAttribute('aria-pressed','true');
+    setTimeout(() => selectable.classList.remove('tap-flash','tap-ripple'), 500);
+  }
+  const targetSpeak = speakEl || selectable;
+  const text = targetSpeak && targetSpeak.getAttribute ? targetSpeak.getAttribute('data-speak') : '';
   if (!text) return;
   const now = Date.now(); if (now - lastSpeakTime < 250) return;
   lastSpeakTime = now;
@@ -1378,6 +1400,35 @@ const JP_PHRASE_READINGS={
  '自己紹介':'jiko shoukai','自己紹介させてください':'jiko shoukai sasete kudasai','出身':'shusshin','出身です':'shusshin desu','させてください':'sasete kudasai','です':'desu','私の名前は':'watashi no namae wa','名前は':'namae wa','インドネシア出身です':'Indonesia shusshin desu',
  'こんにちは':'konnichiwa','こんにちは、自己紹介させてください。私の名前はアリーフです。インドネシア出身です。':'konnichiwa, jiko shoukai sasete kudasai. watashi no namae wa Ariifu desu. Indonesia shusshin desu','こんにちは、はじめまして。私の名前はアリーフです。インドネシアから来ました。':'konnichiwa, hajimemashite. watashi no namae wa Ariifu desu. Indonesia kara kimashita','自己紹介させてください。':'jiko shoukai sasete kudasai.','私の名前はアリーフです。':'watashi no namae wa Ariifu desu.','私の名前はアリフです。':'watashi no namae wa Arifu desu.','インドネシア出身です。':'Indonesia shusshin desu.','インドネシアから来ました。':'Indonesia kara kimashita.','私はインドネシア出身です。':'watashi wa Indonesia shusshin desu.','私はインドネシアから来ました。':'watashi wa Indonesia kara kimashita.','よろしくお願いします。':'yoroshiku onegaishimasu.','ありがとうございます。':'arigatou gozaimasu.','お元気ですか。':'o-genki desu ka.','元気です。':'genki desu.','わかりました。':'wakarimashita.','わかりません。':'wakarimasen.','日本語を勉強しています。':'nihongo o benkyou shiteimasu.','日本へ旅行したいです。':'Nihon e ryokou shitai desu.','将来、日本へ旅行したいです。':'shourai, Nihon e ryokou shitai desu.','お仕事頑張ってください。':'oshigoto ganbatte kudasai.','お疲れ様です。':'otsukaresama desu.','気をつけてください。':'ki o tsukete kudasai.','どういたしまして。':'dou itashimashite.','大丈夫です。':'daijoubu desu.','ちょっと待ってください。':'chotto matte kudasai.','もう一度お願いします。':'mou ichido onegaishimasu.','こちらこそよろしくお願いします。':'kochira koso yoroshiku onegaishimasu.','ありがとう':'arigatou','ありがとうございます':'arigatou gozaimasu','すみません':'sumimasen','ごめんなさい':'gomen nasai','はじめまして':'hajimemashite','よろしくお願いします':'yoroshiku onegaishimasu','食べる':'taberu','食べます':'tabemasu','日本語を勉強しています':'nihongo o benkyou shiteimasu','私は学生です':'watashi wa gakusei desu','お元気ですか':'o-genki desu ka','インドネシアから来ました':'Indonesia kara kimashita','こんばんは':'konbanwa','おはようございます':'ohayou gozaimasu','お仕事頑張ってください':'oshigoto ganbatte kudasai','無事を祈る':'buji o inoru','無事を祈ります':'buji o inorimasu','無事に':'buji ni','日本語を勉強します':'nihongo o benkyou shimasu','私の名前は':'watashi no namae wa','日本語を勉強しています。将来、日本へ旅行したいです。':'nihongo o benkyou shiteimasu. shourai, nihon e ryokou shitai desu.','こんにちは、はじめまして。私の名前はアリーフです。インドネシアから来ました。':'konnichiwa, hajimemashite. watashi no namae wa arief desu. Indonesia kara kimashita.'
 };
+// Expanded Japanese reading library: longest-match first, so long sentences
+// can be converted even when the exact complete sentence is not in the dictionary.
+const JP_ROMAJI_EXPANDED={
+ '自己紹介させてください':'jiko shoukai sasete kudasai','自己紹介':'jiko shoukai','はじめまして':'hajimemashite',
+ '私の名前は':'watashi no namae wa','私の名前':'watashi no namae','名前は':'namae wa','名前':'namae',
+ 'アリーフです':'Ariifu desu','アリフです':'Arifu desu','インドネシア出身です':'Indonesia shusshin desu',
+ 'インドネシアから来ました':'Indonesia kara kimashita','インドネシア出身':'Indonesia shusshin','インドネシアから':'Indonesia kara',
+ '日本語を勉強しています':'nihongo o benkyou shiteimasu','日本語を勉強します':'nihongo o benkyou shimasu','日本語を勉強する':'nihongo o benkyou suru',
+ '日本語が好きです':'nihongo ga suki desu','日本語':'nihongo','勉強しています':'benkyou shiteimasu','勉強します':'benkyou shimasu',
+ '将来':'shourai','旅行したいです':'ryokou shitai desu','旅行したい':'ryokou shitai','日本へ':'Nihon e','日本に':'Nihon ni','日本から':'Nihon kara','日本':'Nihon',
+ 'お仕事頑張ってください':'oshigoto ganbatte kudasai','頑張ってください':'ganbatte kudasai','頑張ります':'ganbarimasu','頑張る':'ganbaru','お仕事':'oshigoto',
+ 'お疲れ様です':'otsukaresama desu','お疲れ様でした':'otsukaresama deshita','お疲れ様':'otsukaresama',
+ 'ありがとうございます':'arigatou gozaimasu','ありがとう':'arigatou','どういたしまして':'dou itashimashite',
+ 'よろしくお願いします':'yoroshiku onegaishimasu','よろしく':'yoroshiku','こちらこそ':'kochira koso',
+ 'お元気ですか':'o-genki desu ka','元気です':'genki desu','大丈夫です':'daijoubu desu','わかりました':'wakarimashita','わかりません':'wakarimasen',
+ 'ちょっと待ってください':'chotto matte kudasai','もう一度お願いします':'mou ichido onegaishimasu','気をつけてください':'ki o tsukete kudasai',
+ '無事を祈ります':'buji o inorimasu','無事を祈る':'buji o inoru','無事に':'buji ni','祈ります':'inorimasu','祈る':'inoru','無事':'buji',
+ '食べます':'tabemasu','食べる':'taberu','飲みます':'nomimasu','飲む':'nomu','行きます':'ikimasu','行く':'iku','来ます':'kimasu','来る':'kuru',
+ '見ます':'mimasu','見る':'miru','聞きます':'kikimasu','聞く':'kiku','読みます':'yomimasu','読む':'yomu','書きます':'kakimasu','書く':'kaku',
+ '話します':'hanashimasu','話す':'hanasu','買います':'kaimasu','買う':'kau','会います':'aimasu','会う':'au','働きます':'hatarakimasu','働く':'hataraku',
+ '住んでいます':'sundeimasu','住みます':'sumimasu','住む':'sumu','使います':'tsukaimasu','使う':'tsukau','作ります':'tsukurimasu','作る':'tsukuru',
+ '今日':'kyou','明日':'ashita','昨日':'kinou','毎日':'mainichi','今':'ima','朝':'asa','昼':'hiru','夜':'yoru','時間':'jikan',
+ 'です':'desu','でした':'deshita','ます':'masu','ました':'mashita','ません':'masen','ください':'kudasai','から来ました':'kara kimashita','から':'kara','まで':'made',
+ '私は':'watashi wa','私が':'watashi ga','私を':'watashi o','私は':'watashi wa','あなたは':'anata wa','あなたが':'anata ga','あなたを':'anata o',
+ 'これからも':'kore kara mo','これから':'kore kara','とても':'totemo','本当に':'hontou ni','少し':'sukoshi','ちょっと':'chotto','もう':'mou','また':'mata','そして':'soshite','でも':'demo',
+ 'ですか':'desu ka','ますか':'masu ka','ませんか':'masen ka','でしょうか':'deshou ka','でしょう':'deshou','と思います':'to omoimasu','と思う':'to omou'
+};
+const JP_ROMAJI_EXPANDED_KEYS=Object.keys(JP_ROMAJI_EXPANDED).sort((a,b)=>b.length-a.length);
+
 const ID_TO_JP={
  'selamat bekerja':'お仕事頑張ってください','semangat bekerja':'お仕事頑張ってください','semoga lancar bekerja':'お仕事頑張ってください','halo':'こんにちは、はじめまして。','hallo':'こんにちは、はじめまして。','selamat pagi':'おはようございます','selamat siang':'こんにちは','selamat malam':'こんばんは','selamat tidur':'おやすみなさい','terima kasih':'ありがとうございます','sama-sama':'どういたしまして','maaf':'ごめんなさい','permisi':'すみません','salam kenal':'はじめまして','apa kabar':'お元気ですか','saya baik':'元気です','tidak apa-apa':'大丈夫です','saya mengerti':'わかりました','saya tidak mengerti':'わかりません','saya tidak tahu':'知りません','di mana toiletnya':'トイレはどこですか','berapa harganya':'いくらですか','saya suka bahasa jepang':'日本語が好きです','saya belajar bahasa jepang':'日本語を勉強しています','saya tinggal di indonesia':'インドネシアに住んでいます','saya pergi dulu':'行ってきます','hati-hati di jalan':'いってらっしゃい'
 };
@@ -1395,23 +1446,49 @@ function normalizeRomajiOutput(text){
  return out;
 }
 function smartRomaji(text){
- let src=String(text||'').trim(); if(!src)return '';
+ let src=String(text||'').normalize('NFKC').trim(); if(!src)return '';
  const normalizedSource=src.replace(/[\u3000]/g,' ').replace(/\s+/g,' ').trim();
- const exact=JP_PHRASE_READINGS[normalizedSource]||JP_PHRASE_READINGS[src]||KANJI_WORDS[normalizedSource]||KANJI_WORDS[src];
+ const exact=JP_PHRASE_READINGS[normalizedSource]||JP_PHRASE_READINGS[src]||KANJI_WORDS[normalizedSource]||KANJI_WORDS[src]||JP_ROMAJI_EXPANDED[normalizedSource];
  if(exact)return normalizeRomajiOutput(exact);
- for(const k of Object.keys(ROMAJI_NAME_MAP).sort((a,b)=>b.length-a.length)) src=src.split(k).join(' '+ROMAJI_NAME_MAP[k]+' ');
- const keys=Object.keys(JP_PHRASE_READINGS).concat(Object.keys(KANJI_WORDS)).sort((a,b)=>b.length-a.length);
- for(const k of keys){const r=JP_PHRASE_READINGS[k]||KANJI_WORDS[k];if(r)src=src.split(k).join(' '+r+' ')}
- const kanaMap={'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n','が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do','ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','ゔ':'vu'};
- const dig={'きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'sha','しゅ':'shu','しょ':'sho','ちゃ':'cha','ちゅ':'chu','ちょ':'cho','にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo','りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo'};
- Object.entries(dig).forEach(([k,v])=>src=src.split(k).join(v));
- src=Array.from(src).map(ch=>kanaMap[ch]||ch).join('');
- src=src.replace(/っ(?=[bcdfghjklmnpqrstvwxyz])/gi,'').replace(/tsu([bcdfghjklmnpqrstvwxyz])/gi,'$1').replace(/n(?=[bmp])/gi,'m').replace(/\bha\b/gi,'wa').replace(/\bhe\b/gi,'e').replace(/\bwo\b/gi,'o');
- return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(src)?'':normalizeRomajiOutput(src);
+
+ // Preserve punctuation while replacing the longest known Japanese chunks.
+ let out='', i=0;
+ while(i<src.length){
+   let matched=false;
+   for(const key of JP_ROMAJI_EXPANDED_KEYS){
+     if(src.startsWith(key,i)){ out+=' '+JP_ROMAJI_EXPANDED[key]+' '; i+=key.length; matched=true; break; }
+   }
+   if(matched) continue;
+   for(const key of Object.keys(ROMAJI_NAME_MAP).sort((a,b)=>b.length-a.length)){
+     if(src.startsWith(key,i)){ out+=' '+ROMAJI_NAME_MAP[key]+' '; i+=key.length; matched=true; break; }
+   }
+   if(matched) continue;
+   let found=null;
+   for(const key of Object.keys(KANJI_WORDS).sort((a,b)=>b.length-a.length)){
+     if(src.startsWith(key,i)){ found=key; break; }
+   }
+   if(found){ out+=' '+KANJI_WORDS[found]+' '; i+=found.length; continue; }
+   const ch=src[i];
+   if(/[、。！？「」『』【】〔〕〈〉《》・，．,.!?]/.test(ch)){out+=ch;i++;continue;}
+   // Kana fallback for individual kana / kana words.
+   const two=src.slice(i,i+2), one=src[i];
+   const kanaDig={'きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'sha','しゅ':'shu','しょ':'sho','ちゃ':'cha','ちゅ':'chu','ちょ':'cho','にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo','りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo'};
+   const kana={'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n','が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do','ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','ゔ':'vu',
+     'ア':'a','イ':'i','ウ':'u','エ':'e','オ':'o','カ':'ka','キ':'ki','ク':'ku','ケ':'ke','コ':'ko','サ':'sa','シ':'shi','ス':'su','セ':'se','ソ':'so','タ':'ta','チ':'chi','ツ':'tsu','テ':'te','ト':'to','ナ':'na','ニ':'ni','ヌ':'nu','ネ':'ne','ノ':'no','ハ':'ha','ヒ':'hi','フ':'fu','ヘ':'he','ホ':'ho','マ':'ma','ミ':'mi','ム':'mu','メ':'me','モ':'mo','ヤ':'ya','ユ':'yu','ヨ':'yo','ラ':'ra','リ':'ri','ル':'ru','レ':'re','ロ':'ro','ワ':'wa','ヲ':'wo','ン':'n','ガ':'ga','ギ':'gi','グ':'gu','ゲ':'ge','ゴ':'go','ザ':'za','ジ':'ji','ズ':'zu','ゼ':'ze','ゾ':'zo','ダ':'da','ヂ':'ji','ヅ':'zu','デ':'de','ド':'do','バ':'ba','ビ':'bi','ブ':'bu','ベ':'be','ボ':'bo','パ':'pa','ピ':'pi','プ':'pu','ペ':'pe','ポ':'po'};
+   if(kanaDig[two]){out+=' '+kanaDig[two];i+=2;continue;}
+   if(kana[one]){out+=' '+kana[one];i++;continue;}
+   out+=one;i++;
+ }
+ out=out.replace(/\s+/g,' ').trim();
+ // If any Kanji remains, do not invent a reading. API fallback may handle it.
+ if(/[\u3400-\u9fff\uf900-\ufaff]/.test(out))return '';
+ out=out.replace(/\bwo\b/gi,'o').replace(/\bhe\b/gi,'e').replace(/\bha\b/gi,'wa');
+ out=out.replace(/\s+([、。,.!?])/g,'$1').replace(/([、。,.!?])(?=\S)/g,'$1 ');
+ return normalizeRomajiOutput(out);
 }
 function isJapaneseText(t){return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(String(t||''))}
 function romajiIsLatin(t){return !!t&&!isJapaneseText(t)&&/^[A-Za-z0-9\s.,!?"“”‘’\-:;()\/]+$/.test(String(t).trim())}
-function findLocalRomaji(jp){const clean=cleanJp(jp);const e=dbFind(clean)||entryForJapanese(clean);const r=e?.romaji||KANJI_WORDS[clean]||JP_PHRASE_READINGS[clean]||smartRomaji(clean);return romajiIsLatin(r)?normalizeRomajiOutput(r):''}
+function findLocalRomaji(jp){const clean=cleanJp(jp);const e=dbFind(clean)||entryForJapanese(clean);const candidates=[e?.romaji,KANJI_WORDS[clean],JP_PHRASE_READINGS[clean],JP_ROMAJI_EXPANDED[clean],smartRomaji(clean)];for(const r of candidates){if(romajiIsLatin(r))return normalizeRomajiOutput(r)}return ''}
 function entryForJapanese(text){return dbFind(text)||Object.entries(JP_PHRASE_READINGS).map(([jp,r])=>({japanese:jp,romaji:r,meaning:localWordMeaning[jp]||'',pos:'Frasa',category:'Ungkapan',jlpt:null,formality:'Neutral',example:'',exampleRomaji:'',exampleId:''})).find(x=>normalizeTranslateKey(x.japanese)===normalizeTranslateKey(text))||null}
 function detectPoliteness(jp,entry){const t=String(jp||'');if(entry?.formality)return entry.formality;if(/(?:です|ます|ました|ません|ませんか|ください|ございます|でした|でしょう)/.test(t))return 'Sopan / Polite';if(/(?:だよ|だね|だぜ|じゃん|だ$|ない$|た$|る$)/.test(t))return 'Casual / Informal';return 'Netral / Neutral';}
 function detectWordType(jp,entry){if(entry?.pos)return entry.pos;const t=String(jp||'');if(/[。！？!?]/.test(t))return 'Kalimat';if(/(?:ます|ません|ました|ませんでした)$/.test(t))return 'Kata kerja (bentuk sopan)';if(/る$/.test(t))return 'Kata kerja';return 'Ungkapan / Kosakata';}
