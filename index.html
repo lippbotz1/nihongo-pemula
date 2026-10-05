@@ -249,13 +249,11 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 
 /* ===== PREMIUM PRICE BOX ALIGNMENT FIX ===== */
 /* Harga tetap mengikuti garis kotak; kartu pembelajaran lain tetap boleh mengambang. */
-.price-row.is-selected,.price-row.selected,.price-row.tap-ripple,.price-row.tap-flash{
+.price-row.is-selected,.price-row.selected{
   transform:none!important;
   scale:none!important;
   border-radius:0!important;
   filter:none!important;
-  animation:none!important;
-  box-shadow:none!important;
 }
 .price-table,.price-table *{
   box-sizing:border-box;
@@ -268,7 +266,7 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
 }
 .kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.formality-item.is-selected,
 .vocab-item.is-selected,.quiz-option.is-selected,.grammar-box.is-selected,.flashcard.is-selected,
-.task.is-selected{
+.task.is-selected,.price-row.selected{
   transform:translateY(-8px) scale(1.025)!important;
   filter:brightness(1.08);
 }
@@ -278,7 +276,7 @@ footer .watermark .brand{background:var(--gp);-webkit-background-clip:text;backg
   content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
   box-shadow:0 0 0 2px rgba(77,200,255,.16),0 0 24px rgba(77,200,255,.18);
 }
-.kana-item.tap-ripple,.kanji-item.tap-ripple,.phrase-row.tap-ripple,.formality-item.tap-ripple,.vocab-item.tap-ripple,.quiz-option.tap-ripple,.grammar-box.tap-ripple,.flashcard.tap-ripple,.task.tap-ripple{animation:learningTapRipple .42s ease-out both!important}
+.tap-ripple{animation:learningTapRipple .42s ease-out both!important}
 @keyframes learningTapRipple{0%{transform:translateY(-1px) scale(.99)}45%{transform:translateY(-10px) scale(1.035)}100%{transform:translateY(-8px) scale(1.025)}}
 
 /* ===== FINAL MOBILE UI/UX PATCH — Dashboard + Pengaturan ===== */
@@ -459,6 +457,79 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 </style>
 
 <style> .price-original{text-decoration:line-through;opacity:.6;font-size:12px}.price-final{font-weight:900}.price-discount-badge{display:inline-block;margin-top:4px;font-size:10px;padding:3px 6px;border-radius:999px;background:#22c55e;color:#07130d;font-weight:800} </style>
+
+<style id="premium-price-strict-inner-fix">
+/* =========================================================
+   PREMIUM PRICE BOX — STRICT INNER BORDER FIX
+   Highlight pilihan selalu berada DI DALAM garis price-table.
+   Tidak memakai transform/scale pada baris paket.
+   ========================================================= */
+.price-table{
+  position:relative !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+  isolation:isolate !important;
+}
+.price-table-header{
+  position:relative !important;
+  z-index:5 !important;
+  box-sizing:border-box !important;
+}
+.price-row,
+.price-row:hover,
+.price-row.selected,
+.price-row.is-selected,
+.price-row.tap-ripple,
+.price-row.tap-flash{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+  scale:none !important;
+  filter:none !important;
+  animation:none !important;
+  border-radius:0 !important;
+  overflow:hidden !important;
+  position:relative !important;
+  box-shadow:none !important;
+}
+.price-row.selected{
+  background:transparent !important;
+}
+.price-row.selected::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:2px !important;
+  border-radius:9px !important;
+  background:rgba(94,167,255,.105) !important;
+  border:1px solid rgba(94,167,255,.16) !important;
+  box-sizing:border-box !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+}
+.price-row.selected::after{
+  content:"✓ Dipilih" !important;
+  position:absolute !important;
+  left:10px !important;
+  top:7px !important;
+  z-index:3 !important;
+  border-radius:999px !important;
+  padding:2px 6px !important;
+  background:var(--gp) !important;
+  color:#081224 !important;
+  font-size:7px !important;
+  font-weight:900 !important;
+  letter-spacing:.25px !important;
+  opacity:.95 !important;
+  pointer-events:none !important;
+}
+.price-row > *{
+  position:relative !important;
+  z-index:1 !important;
+}
+</style>
 </head>
 <body>
 
