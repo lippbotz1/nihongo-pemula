@@ -131,9 +131,9 @@ header.hero p{color:var(--text-dim);font-size:14px;max-width:560px;margin:0 auto
 .translate-result-meaning{font-size:13px;color:var(--text-soft);font-weight:600;padding-top:10px;border-top:1px dashed rgba(140,160,220,.15)}
 .translate-notfound{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.22);border-radius:14px;padding:16px 18px;color:#b9dcff;font-size:13px;margin-top:14px;text-align:center;display:none}
 .translate-notfound.show{display:block}
-.formality-box{background:linear-gradient(135deg,rgba(94,167,255,.08),rgba(94,167,255,.02));border:1px solid rgba(94,167,255,.28);border-radius:16px;padding:18px 20px;margin-top:14px;display:none}
-.formality-box.show{display:block}
-.formality-title{font-size:12px;font-weight:800;color:var(--violet);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.formality-box{background:linear-gradient(135deg,rgba(94,167,255,.08),rgba(94,167,255,.02));border:1px solid rgba(94,167,255,.28);border-radius:16px;padding:18px 20px;margin-top:14px;display:none}.formality-box.show{display:block}.formality-title{font-size:12px;font-weight:900;color:var(--violet);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.ai-recommendation{border:1px solid rgba(77,200,255,.30);background:linear-gradient(145deg,rgba(77,200,255,.12),rgba(94,167,255,.04));border-radius:15px;padding:15px;margin-bottom:15px}.ai-recommendation-label{font-size:10px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:#70c9ff;margin-bottom:8px}.ai-recommendation-jp{font-size:20px;font-weight:900;line-height:1.55;color:#f2f7ff}.ai-recommendation-romaji{font-size:13px;color:#ffd978;font-weight:800;margin-top:4px}.ai-recommendation-id{font-size:13px;color:#eef5ff;margin-top:5px}.ai-recommendation-use{font-size:11px;color:#b8c9df;line-height:1.55;margin-top:7px}.ai-recommendation-reason{font-size:11px;color:#8fb2d9;line-height:1.55;margin-top:5px}.ai-short-alt{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(140,160,220,.16)}.ai-short-alt b{font-size:10px;color:#79bcff}.formality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.formality-card{position:relative;border:1px solid rgba(94,167,255,.16);border-radius:14px;background:rgba(14,28,55,.72);padding:13px;min-width:0}.formality-card.available{border-color:rgba(94,167,255,.28)}.formality-card.unavailable{opacity:.62}.formality-card-label{font-size:10px;font-weight:900;letter-spacing:.8px;color:#83c6ff;text-transform:uppercase;margin-bottom:7px}.formality-card-jp{font-size:17px;font-weight:900;line-height:1.5;overflow-wrap:anywhere}.formality-card-romaji{font-size:11px;color:#ffd978;font-weight:800;margin-top:3px;overflow-wrap:anywhere}.formality-card-id{font-size:12px;color:#edf4ff;margin-top:5px;line-height:1.45}.formality-card-use{font-size:10px;color:#9fb4cf;line-height:1.5;margin-top:6px}.formality-unavailable{font-size:11px;color:#8293aa;line-height:1.45}.formality-best{position:absolute;right:9px;top:9px;border-radius:999px;padding:3px 7px;background:rgba(62,211,153,.16);border:1px solid rgba(62,211,153,.28);color:#77e6b6;font-size:8px;font-weight:900;letter-spacing:.4px}
+@media(max-width:640px){.formality-grid{grid-template-columns:1fr}}
 .formality-category{font-size:12px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px dashed rgba(94,167,255,.15)}
 .formality-list{display:flex;flex-direction:column;gap:8px}
 .formality-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer}
@@ -716,7 +716,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         </details>
       </div>
       <div class="translate-notfound" id="translateNotFound"><strong>⚠️ Translate sedang tidak tersedia.</strong><br>Jika Translate sedang tidak tersedia, coba lagi beberapa saat.</div>
-      <div class="formality-box" id="formalityBox"><div class="formality-title">🎌 Tingkat Kesopanan</div><div id="formalityContent"></div></div>
+      <div class="formality-box" id="formalityBox"><div class="formality-title">🎌 Tingkat Kesopanan & Rekomendasi AI</div><div id="formalityContent"></div></div>
       <div class="history-section"><div class="history-title"><span>📜 Riwayat</span><button class="history-clear" id="clearHistoryBtn">Hapus</button></div><div class="history-list" id="historyList"><div class="history-empty">Belum ada riwayat.</div></div></div>
     </div>
   </div>
@@ -1709,32 +1709,38 @@ async function fetchTranslateProvider(sl,tl,text){
   return d;
 }
 let currentTranslationState=null;
+function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function renderFormalityLevels(ai){
+  const box=document.getElementById('formalityBox'),content=document.getElementById('formalityContent');
+  if(!content)return;
+  const rec=ai?.recommendation||{};
+  const levels=ai?.politenessLevels||{};
+  const defs=[
+    ['casual','🩵 KASUAL','Kasual / Informal'],['neutral','🟨 NETRAL','Netral'],['polite','🟦 SOPAN · 丁寧語','Sopan / Polite'],
+    ['formal','🟪 FORMAL','Formal'],['honorific','🟥 HONORIFIK · 尊敬語','Honorific / 尊敬語'],['humble','🟩 HUMBLE · 謙譲語','Humble / 謙譲語']
+  ];
+  const cards=defs.map(([key,label,labelPlain])=>{
+    const v=levels[key]||{};
+    const best=String(rec.bestLabel||'').toLowerCase().includes(labelPlain.split(' / ')[0].toLowerCase()) || (key==='polite' && String(rec.bestLabel||'').toLowerCase().includes('sopan'));
+    if(!v.available){return `<div class="formality-card unavailable"><div class="formality-card-label">${escapeHtml(label)}</div><div class="formality-unavailable">Tidak ada bentuk khusus yang natural untuk konteks ini.</div></div>`}
+    return `<div class="formality-card available"><div class="formality-card-label">${escapeHtml(label)}</div>${best?'<span class="formality-best">★ REKOMENDASI</span>':''}<div class="formality-card-jp">${escapeHtml(v.japanese||'—')}</div><div class="formality-card-romaji">${escapeHtml(v.romaji||'—')}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(v.meaningIndonesia||'—')}</div><div class="formality-card-use">${escapeHtml(v.usage||'Sesuai konteks penggunaan.')}</div></div>`;
+  }).join('');
+  const shortAlt=(rec.shortAlternativeJapanese&&rec.shortAlternativeRomaji)?`<div class="ai-short-alt"><b>🔄 ALTERNATIF SINGKAT</b><div class="formality-card-jp">${escapeHtml(rec.shortAlternativeJapanese)}</div><div class="formality-card-romaji">${escapeHtml(rec.shortAlternativeRomaji)}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(rec.shortAlternativeMeaning||'')}</div></div>`:'';
+  content.innerHTML=`<div class="ai-recommendation"><div class="ai-recommendation-label">💡 Rekomendasi AI — paling natural & aman</div><div class="ai-recommendation-jp">${escapeHtml(rec.bestJapanese||ai.translatedText||'—')}</div><div class="ai-recommendation-romaji">${escapeHtml(rec.bestRomaji||ai.romaji||'—')}</div><div class="ai-recommendation-id">🇮🇩 ${escapeHtml(rec.bestMeaning||ai.meaning||'—')}</div><div class="ai-recommendation-use">📌 ${escapeHtml(rec.bestUsage||'Pilihan aman untuk konteks umum.')}</div><div class="ai-recommendation-reason">${escapeHtml(rec.reason||'')}</div>${shortAlt}</div><div class="formality-grid">${cards}</div>`;
+  if(box)box.classList.add('show');
+}
 function showTranslationResult(ai,original){
-  const clean=String(ai?.translatedText||'').trim();
-  const romaji=String(ai?.romaji||'').trim();
-  const id=String(ai?.meaning||'').trim();
-  const formality=String(ai?.formality||'Sopan / Polite').trim();
+  const clean=String(ai?.translatedText||'').trim(),romaji=String(ai?.romaji||'').trim(),id=String(ai?.meaning||'').trim();
+  const formality=String(ai?.formality||ai?.recommendation?.bestLabel||'Sopan / Polite').trim();
   currentTranslationState={jp:clean,id,romaji,originalText:original,entry:null,formality,ai};
   document.getElementById('resultMain').textContent=clean;
-  const romajiEl=document.getElementById('resultRomaji');
-  romajiEl.textContent=romaji||'Bacaan belum tersedia';
-  romajiEl.classList.toggle('romaji-unavailable',!romaji);
+  const romajiEl=document.getElementById('resultRomaji');romajiEl.textContent=romaji||'Bacaan belum tersedia';romajiEl.classList.toggle('romaji-unavailable',!romaji);
   document.getElementById('resultMeaning').textContent=id||'—';
   const set=(idEl,v)=>{const el=document.getElementById(idEl);if(el)el.textContent=v||'—'};
-  set('resultFormalityMain',formality);
-  set('resultNote',ai?.explanation||'Terjemahan AI berhasil.');
-  set('resultPos',ai?.pos||'—');
-  set('resultForm',ai?.form||'—');
-  set('resultJlpt',ai?.jlpt||'Tidak ditentukan');
-  const ex=document.getElementById('translateExample');
-  if(ex)ex.style.display='none';
-  const resultBox=document.getElementById('translateResult');
-  resultBox.classList.add('show');
-  resultBox.setAttribute('data-speak',clean);
-  const formalityBox=document.getElementById('formalityBox');
-  const content=document.getElementById('formalityContent');
-  if(content) content.textContent=(formality||'Sopan / Polite')+' — '+(ai?.alternative&&ai.alternative!=='—'?'Alternatif: '+ai.alternative:'Bentuk sopan diprioritaskan oleh AI.');
-  if(formalityBox)formalityBox.classList.add('show');
+  set('resultFormalityMain',formality);set('resultNote',ai?.explanation||'Terjemahan AI berhasil.');set('resultPos',ai?.pos||'—');set('resultForm',ai?.form||'—');set('resultJlpt',ai?.jlpt||'Tidak ditentukan');
+  const ex=document.getElementById('translateExample');if(ex)ex.style.display='none';
+  const resultBox=document.getElementById('translateResult');resultBox.classList.add('show');resultBox.setAttribute('data-speak',clean);
+  renderFormalityLevels(ai);
   addToHistory({jp:clean,romaji:romaji||'—',id,originalText:original});
   setTimeout(()=>speak(clean),120);
   return currentTranslationState;
