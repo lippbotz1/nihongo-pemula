@@ -454,7 +454,17 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .translate-action{flex-basis:calc(50% - 4px);min-width:0}
 }
 
-</style>
+<style id="translate-click-tts-hard-fix">
+.ai-recommendation,.ai-short-alt,.formality-card.available{
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:rgba(77,200,255,.18);
+  touch-action:manipulation;
+  user-select:none;
+}
+.ai-recommendation:active,.ai-short-alt:active,.formality-card.available:active{
+  transform:translateY(-2px);
+}
+</style></style>
 
 <style> .price-original{text-decoration:line-through;opacity:.6;font-size:12px}.price-final{font-weight:900}.price-discount-badge{display:inline-block;margin-top:4px;font-size:10px;padding:3px 6px;border-radius:999px;background:#22c55e;color:#07130d;font-weight:800} </style>
 
@@ -1159,16 +1169,32 @@ function initVoices() { if (!('speechSynthesis' in window)) return; const voices
 if ('speechSynthesis' in window) { initVoices(); speechSynthesis.onvoiceschanged = initVoices; }
 function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
-  if (speaking) { try { speechSynthesis.cancel(); } catch (e) {} }
-  speaking = true;
-  try { speechSynthesis.cancel();
+  try {
+    speechSynthesis.cancel();
     const clean = String(text).replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+    if (!clean) return;
     const u = new SpeechSynthesisUtterance(clean);
-    u.lang = 'ja-JP'; u.rate = Math.max(0.5, Math.min(1.5, Number(localStorage.getItem('jl_speech_rate') || 0.85))); u.volume = 1;
-    if (currentVoiceGender === 'female') { u.pitch = 1.02; if (femaleVoice) u.voice = femaleVoice; } else { u.pitch = 0.92; if (maleVoice) u.voice = maleVoice; }
-    u.onend = () => { speaking = false; }; u.onerror = () => { speaking = false; };
+    u.lang = 'ja-JP';
+    u.rate = Math.max(0.5, Math.min(1.5, Number(localStorage.getItem('jl_speech_rate') || 0.85)));
+    u.volume = 1;
+    const voices = speechSynthesis.getVoices ? speechSynthesis.getVoices() : [];
+    const jpVoices = voices.filter(v => /^ja(?:-|_)/i.test(v.lang || ''));
+    if (currentVoiceGender === 'female') {
+      u.pitch = 1.02;
+      u.voice = femaleVoice || jpVoices[1] || jpVoices[0] || null;
+    } else {
+      u.pitch = 0.92;
+      u.voice = maleVoice || jpVoices[0] || jpVoices[1] || null;
+    }
+    u.onstart = () => { speaking = true; };
+    u.onend = () => { speaking = false; };
+    u.onerror = ev => { speaking = false; console.warn('TTS Jepang gagal:', ev && ev.error ? ev.error : ev); };
+    speaking = true;
     speechSynthesis.speak(u);
-  } catch (e) { speaking = false; }
+  } catch (e) {
+    speaking = false;
+    console.warn('TTS:', e);
+  }
 }
 function updateVoiceUI() {
   const m = document.getElementById('voiceMaleOpt'), f = document.getElementById('voiceFemaleOpt'), b = document.getElementById('voiceMainBtn');
@@ -1185,27 +1211,51 @@ document.getElementById('voiceFemaleOpt').addEventListener('click', () => { curr
 document.addEventListener('click', e => { const vt = document.querySelector('.voice-toggle'); if (vt && !vt.contains(e.target)) document.getElementById('voicePicker').classList.remove('show'); });
 
 let lastSpeakTime = 0;
-document.body.addEventListener('click', e => {
-  const selectable = e.target.closest('.kana-item,.kanji-item,.phrase-row,.grammar-box,.formality-item,.formality-card.available,.ai-recommendation,.ai-short-alt,.vocab-item,.quiz-option,.flashcard,.task,.price-row');
-  const speakEl = e.target.closest('[data-speak]');
-  if (!selectable && !speakEl) return;
-  if (selectable) {
-    document.querySelectorAll('.kana-item.is-selected,.kanji-item.is-selected,.phrase-row.is-selected,.grammar-box.is-selected,.formality-item.is-selected,.formality-card.is-selected,.ai-recommendation.is-selected,.ai-short-alt.is-selected,.vocab-item.is-selected,.quiz-option.is-selected,.flashcard.is-selected,.task.is-selected,.price-row.selected').forEach(x => {
-      if (x !== selectable) { x.classList.remove('is-selected','tap-flash','tap-ripple'); x.setAttribute('aria-pressed','false'); }
-    });
-    selectable.classList.remove('tap-flash','tap-ripple');
-    void selectable.offsetWidth;
-    selectable.classList.add('is-selected','tap-flash','tap-ripple');
-    selectable.setAttribute('aria-pressed','true');
-    setTimeout(() => selectable.classList.remove('tap-flash','tap-ripple'), 500);
-  }
-  const targetSpeak = speakEl || selectable;
-  const text = targetSpeak && targetSpeak.getAttribute ? targetSpeak.getAttribute('data-speak') : '';
-  if (!text) return;
-  const now = Date.now(); if (now - lastSpeakTime < 250) return;
+function handleTranslateSpeakCard(el, event) {
+  if (!el) return false;
+  const text = String(el.getAttribute('data-speak') || '').trim();
+  if (!text) return false;
+  try { if (event) event.preventDefault(); } catch (_) {}
+  document.querySelectorAll('.ai-recommendation.is-selected,.ai-short-alt.is-selected,.formality-card.is-selected').forEach(x => {
+    if (x !== el) {
+      x.classList.remove('is-selected','tap-flash','tap-ripple');
+      x.setAttribute('aria-pressed','false');
+    }
+  });
+  el.classList.remove('is-selected','tap-flash','tap-ripple');
+  void el.offsetWidth;
+  el.classList.add('is-selected','tap-flash','tap-ripple');
+  el.setAttribute('aria-pressed','true');
+  setTimeout(() => el.classList.remove('tap-flash','tap-ripple'), 500);
+  const now = Date.now();
+  if (now - lastSpeakTime < 180) return true;
   lastSpeakTime = now;
   speak(text);
-}, { passive: true });
+  return true;
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('.ai-recommendation,.ai-short-alt,.formality-card.available') : null;
+  if (el) handleTranslateSpeakCard(el, e);
+}, true);
+document.addEventListener('pointerup', e => {
+  if (!e.isPrimary) return;
+  const el = e.target && e.target.closest ? e.target.closest('.ai-recommendation,.ai-short-alt,.formality-card.available') : null;
+  if (!el) return;
+  el.classList.add('is-selected','tap-flash');
+  setTimeout(() => el.classList.remove('tap-flash'), 500);
+}, {passive:true});
+function bindTranslateSpeakCards() {
+  document.querySelectorAll('.ai-recommendation,.ai-short-alt,.formality-card.available').forEach(el => {
+    el.setAttribute('role','button');
+    el.setAttribute('tabindex','0');
+    el.setAttribute('aria-pressed','false');
+    el.style.cursor='pointer';
+    el.onclick = function(e) { handleTranslateSpeakCard(this, e); };
+    el.onkeydown = function(e) {
+      if (e.key === 'Enter' || e.key === ' ') handleTranslateSpeakCard(this, e);
+    };
+  });
+}
 // Keyboard accessibility for clickable AI recommendation/formality cards.
 document.body.addEventListener('keydown', e => {
   if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1743,7 +1793,7 @@ function renderFormalityLevels(ai){
   const shortAlt=(altJp&&rec.shortAlternativeRomaji)?`<div class="ai-short-alt" data-speak="${escapeAttr(altJp)}" role="button" tabindex="0"><b>🔄 ALTERNATIF SINGKAT · 🔊 KETUK UNTUK MENDENGARKAN</b><div class="formality-card-jp">${escapeHtml(altJp)}</div><div class="formality-card-romaji">${escapeHtml(rec.shortAlternativeRomaji)}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(rec.shortAlternativeMeaning||'')}</div></div>`:'';
   const bestJp=String(rec.bestJapanese||ai.translatedText||'').trim();
   content.innerHTML=`<div class="ai-recommendation" data-speak="${escapeAttr(bestJp)}" role="button" tabindex="0" aria-label="Dengarkan rekomendasi AI"><div class="ai-recommendation-label">💡 Rekomendasi AI — paling natural & aman · 🔊 KETUK UNTUK MENDENGARKAN</div><div class="ai-recommendation-jp">${escapeHtml(bestJp||'—')}</div><div class="ai-recommendation-romaji">${escapeHtml(rec.bestRomaji||ai.romaji||'—')}</div><div class="ai-recommendation-id">🇮🇩 ${escapeHtml(rec.bestMeaning||ai.meaning||'—')}</div><div class="ai-recommendation-use">📌 ${escapeHtml(rec.bestUsage||'Pilihan aman untuk konteks umum.')}</div><div class="ai-recommendation-reason">${escapeHtml(rec.reason||'')}</div>${shortAlt}</div><div class="formality-grid">${cards}</div>`;
-  if(box)box.classList.add('show');
+  if(box)box.classList.add('show'); bindTranslateSpeakCards();
 }
 function showTranslationResult(ai,original){
   const clean=String(ai?.translatedText||'').trim(),romaji=String(ai?.romaji||'').trim(),id=String(ai?.meaning||'').trim();
