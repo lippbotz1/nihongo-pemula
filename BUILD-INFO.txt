@@ -1,3 +1,5 @@
-Nihongo Premium — Presence/Admin Login Status update
-
-Admin now shows whether each premium user is currently online, based on Firebase Realtime Database presence with onDisconnect cleanup and 20-second heartbeat.
+Nihongo Premium - Premium Box Alignment Final
+- index.html: fixed premium package box alignment and selection styling.
+- admin.html: preserved from the current AUTOLOGIN + PRICEBOX build.
+- Firebase/Auth/API files preserved.
+- Learning cards still retain floating tap feedback; price rows stay clipped to the price box so borders align.

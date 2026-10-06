@@ -31,3 +31,8 @@ Upload this project to Vercel. The user app is `/` and the admin panel is `/admi
 
 ## Important security
 If a Firebase service-account JSON/private key was ever exposed in a screenshot/chat, revoke that key in Google Cloud/Firebase IAM and generate a replacement before production use.
+
+
+### Translate AI
+Tambahkan Environment Variables berikut pada project Vercel yang sama:
+`GEMINI_API_KEY` dan `GROQ_API_KEY`. Opsional: `GEMINI_MODEL` dan `GROQ_MODEL`. Translate tidak memiliki fallback lokal/offline. Jika Gemini gagal atau terkena rate limit, backend mencoba Groq. Jika keduanya gagal, endpoint mengembalikan HTTP 503 dan UI memberi catatan untuk mencoba lagi beberapa saat.

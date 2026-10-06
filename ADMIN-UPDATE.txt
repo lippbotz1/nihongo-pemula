@@ -1,0 +1,11 @@
+ADMIN UPDATE
+
+Admin login email baru:
+admin@nihongo.id
+
+Password tidak disimpan di source code. Password dibuat/diatur langsung di Firebase Authentication.
+
+Sebelum deploy:
+1. Pastikan user admin@nihongo.id ada di Firebase Authentication.
+2. Vercel Environment Variable ADMIN_EMAILS harus berisi admin@nihongo.id.
+3. Deploy ke project Vercel yang sama.
