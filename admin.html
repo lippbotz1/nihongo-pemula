@@ -37,7 +37,7 @@ window.resetPassword=async uid=>{const p=prompt('Password baru (minimal 8 karakt
 window.resetDevice=async uid=>{if(!confirm('Reset perangkat user ini? User akan bisa login kembali di perangkat lain.'))return;try{await api('resetDevice',{uid});alert('Device berhasil di-reset. User sekarang bisa login kembali.');await load()}catch(e){alert(e.message)}};
 $('duration').onchange=()=>{ $('customDurationBox').classList.toggle('hidden',$('duration').value!=='custom'); };
 $('createBtn').onclick=async()=>{msg($('createMsg'),'Membuat akun...');try{const raw=$('duration').value;let duration=raw==='custom'?Number($('customDays').value):Number(raw);if(raw==='custom'&&(!Number.isInteger(duration)||duration<1||duration>3650))throw Error('Jumlah hari custom harus 1–3650.');const d=await api('create',{email:$('newEmail').value,password:$('newPassword').value,duration});msg($('createMsg'),'Berhasil: '+d.user.email);$('newEmail').value='';$('newPassword').value='';await load()}catch(e){msg($('createMsg'),'Gagal: '+e.message)}};
-$('refresh').onclick=load;$('logout').onclick=()=>auth.signOut();$('search').addEventListener('input',render);setInterval(async()=>{if(!auth.currentUser)return;try{
-  const d=await api('presence'); presence=d.presence||{}; render();
-}catch(e){console.warn('Presence refresh:',e)}},5000);
+$('refresh').onclick=load;$('logout').onclick=()=>auth.signOut();$('search').addEventListener('input',render);
+async function refreshLiveStatus(){if(!auth.currentUser)return;try{const d=await api('status');presence=d.presence||{};loginHistory=d.loginHistory||{};render();}catch(e){console.warn('Live status refresh:',e)}}
+setInterval(refreshLiveStatus,5000);
 </script></body></html>
