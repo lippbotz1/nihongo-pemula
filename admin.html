@@ -1,8 +1,138 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nihongo Premium — Admin</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<style>body{font-family:system-ui;background:#081224;color:#eef1f8;margin:0}*{box-sizing:border-box}.wrap{max-width:1100px;margin:auto;padding:20px}.card{background:#121c30;border:1px solid #263553;border-radius:16px;padding:18px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}input,select,button{width:100%;padding:12px;border-radius:10px;border:1px solid #33476d;background:#0b1528;color:inherit}button{cursor:pointer;background:#3478f6;border:0;font-weight:700}.danger{background:#b83a4b}.muted{color:#9aaaca;font-size:13px}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.hidden{display:none}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#19335d;font-size:12px}.ok{background:#155b3a}.bad{background:#662637}.online{background:#155b3a;color:#b9ffd8}.offline{background:#30394c;color:#aeb8cc}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:#6b7280}.dot.on{background:#22c55e;box-shadow:0 0 8px #22c55e}.lastseen{display:block;color:#9aaaca;font-size:11px;margin-top:4px}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #263553;text-align:left;font-size:13px} @media(max-width:700px){table{display:block;overflow:auto;white-space:nowrap}}</style></head><body><div class="wrap">
-<div id="login" class="card" style="max-width:420px;margin:60px auto"><h2>🔐 Admin Nihongo Premium</h2><p class="muted">Hanya email admin yang terdaftar di Vercel yang dapat mengelola user.</p><input id="email" type="email" placeholder="admin@nihongo.id"><br><br><input id="password" type="password" placeholder="Password"><br><br><button id="loginBtn">Masuk Admin</button><p id="loginMsg" class="muted"></p></div>
-<main id="app" class="hidden"><div class="row"><div><h1>👑 Admin Premium</h1><p class="muted">Kelola akun tanpa upload ulang index.html.</p></div><button id="logout" style="max-width:140px">Keluar</button></div>
+<style>
+:root{
+  --bg:#070b16;
+  --panel:rgba(17,24,39,.82);
+  --panel2:rgba(13,19,33,.92);
+  --line:rgba(148,163,184,.16);
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --accent:#7c5cff;
+  --accent2:#00d4ff;
+  --green:#22c55e;
+  --red:#ef4444;
+  --shadow:0 18px 55px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(124,92,255,.18),transparent 28%),
+    radial-gradient(circle at 92% 8%,rgba(0,212,255,.12),transparent 25%),
+    linear-gradient(135deg,#060914 0%,#0a1020 48%,#070b16 100%);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:34px 34px;
+}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:auto;padding:28px 22px 60px}
+.card{
+  background:linear-gradient(145deg,rgba(18,26,44,.92),rgba(10,16,29,.9));
+  border:1px solid var(--line);border-radius:22px;padding:22px;margin:16px 0;
+  box-shadow:var(--shadow);backdrop-filter:blur(16px);
+}
+.card h3{margin:0 0 7px;font-size:18px;letter-spacing:-.2px}
+h1{margin:0;font-size:30px;letter-spacing:-1px}
+h2{letter-spacing:-.5px}
+p{line-height:1.55}
+.muted{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+input,select,button{
+  width:100%;padding:13px 14px;border-radius:13px;
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(5,10,20,.68);color:var(--text);
+  outline:none;transition:.2s ease;font:inherit;
+}
+input:focus,select:focus{
+  border-color:rgba(124,92,255,.75);
+  box-shadow:0 0 0 4px rgba(124,92,255,.12);
+}
+button{
+  cursor:pointer;border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(135deg,#7457ff,#4b8dff);
+  font-weight:750;box-shadow:0 8px 22px rgba(74,93,255,.18);
+}
+button:hover{transform:translateY(-1px);filter:brightness(1.08)}
+button:active{transform:translateY(0)}
+button.danger,.danger{background:linear-gradient(135deg,#ef4444,#b91c1c)!important}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.hidden{display:none}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;width:max-content;
+  padding:6px 10px;border-radius:999px;background:#182746;
+  border:1px solid rgba(148,163,184,.14);font-size:12px;font-weight:700;
+}
+.ok{background:rgba(21,91,58,.35);color:#b9ffd8;border-color:rgba(34,197,94,.22)}
+.bad{background:rgba(102,38,55,.35);color:#ffc2cb;border-color:rgba(239,68,68,.22)}
+.online{background:rgba(21,91,58,.35);color:#b9ffd8}
+.offline{background:rgba(48,57,76,.5);color:#b8c1d2}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748b}
+.dot.on{background:#22c55e;box-shadow:0 0 10px #22c55e}
+.lastseen{display:block;color:#718096;font-size:11px;margin-top:5px}
+label{display:block;margin:0 0 7px;color:#cbd5e1;font-size:12px;font-weight:700}
+table{width:100%;border-collapse:separate;border-spacing:0;margin-top:2px}
+th{
+  padding:13px 12px;text-align:left;font-size:11px;text-transform:uppercase;
+  letter-spacing:.08em;color:#8190a8;background:rgba(255,255,255,.025);
+  border-bottom:1px solid var(--line);
+}
+td{padding:14px 12px;border-bottom:1px solid rgba(148,163,184,.09);font-size:13px;vertical-align:middle}
+tr:hover td{background:rgba(124,92,255,.035)}
+td:first-child,th:first-child{border-radius:12px 0 0 12px}
+td:last-child,th:last-child{border-radius:0 12px 12px 0}
+#table{overflow-x:auto;border:1px solid rgba(148,163,184,.1);border-radius:16px}
+#table .row{min-width:410px}
+#stats{
+  width:100%;padding:14px 16px;border-radius:15px;
+  background:linear-gradient(135deg,rgba(124,92,255,.13),rgba(0,212,255,.06));
+  color:#dbeafe;border:1px solid rgba(124,92,255,.18);
+  white-space:normal;line-height:1.6;
+}
+#pricingEditor .card{
+  background:rgba(4,9,18,.45);box-shadow:none;border-radius:17px;
+}
+#pricingEditor .card:hover{border-color:rgba(124,92,255,.28)}
+#login{
+  position:relative;overflow:hidden;
+  background:linear-gradient(145deg,rgba(19,27,48,.96),rgba(8,13,25,.96));
+}
+#login:before{
+  content:"";position:absolute;width:190px;height:190px;border-radius:50%;
+  right:-80px;top:-80px;background:rgba(124,92,255,.18);filter:blur(5px)
+}
+#login>*{position:relative}
+#login h2{font-size:25px;margin-top:0}
+#app> .row:first-child{
+  padding:10px 2px 22px;border-bottom:1px solid rgba(148,163,184,.1)
+}
+#app> .row:first-child .muted{margin:6px 0 0}
+#logout{max-width:150px}
+section-title{}
+@media(max-width:800px){
+  .wrap{padding:16px 12px 40px}
+  .card{padding:17px;border-radius:18px}
+  h1{font-size:25px}
+  #app> .row:first-child{align-items:flex-start}
+  #logout{max-width:110px}
+  th,td{padding:11px 9px}
+}
+@media(max-width:560px){
+  .row{flex-wrap:wrap}
+  #app> .row:first-child{flex-wrap:nowrap}
+  #logout{width:100px}
+  .grid{grid-template-columns:1fr}
+  #customDurationBox{grid-column:auto!important}
+  .card{margin:11px 0}
+}
+</style></head><body><div class="wrap">
+<div id="login" class="card" style="max-width:440px;margin:72px auto"><div style="font-size:42px;margin-bottom:8px">👑</div><h2>Admin Nihongo Premium</h2><p class="muted">Panel kontrol khusus admin untuk mengelola akun, premium, perangkat, dan harga paket.</p><input id="email" type="email" placeholder="admin@nihongo.id"><br><br><input id="password" type="password" placeholder="Password"><br><br><button id="loginBtn">🔐 Masuk ke Dashboard</button><p id="loginMsg" class="muted"></p></div>
+<main id="app" class="hidden"><div class="row"><div><div class="pill" style="margin-bottom:8px;background:rgba(124,92,255,.13);color:#c4b5fd">● CONTROL CENTER</div><h1>👑 Admin Premium</h1><p class="muted">Kelola akun tanpa upload ulang index.html.</p></div><button id="logout" style="max-width:140px">Keluar</button></div>
 <div class="card"><h3>➕ Tambah Pembeli</h3><div class="grid"><input id="newEmail" type="email" placeholder="Email pembeli"><input id="newPassword" type="password" placeholder="Password minimal 8 karakter"><select id="duration"><option value="30">Premium 30 hari</option><option value="90">Premium 90 hari</option><option value="365">Premium 1 tahun</option><option value="9999">Lifetime</option><option value="custom">Custom</option></select><div id="customDurationBox" class="hidden" style="grid-column:1/-1"><input id="customDays" type="number" min="1" max="3650" placeholder="Jumlah hari custom (contoh: 45)"><small class="muted">Masukkan masa aktif custom, 1–3650 hari.</small></div></div><br><button id="createBtn">Buat Akun & Aktifkan Premium</button><p id="createMsg" class="muted"></p></div>
 <div class="card"><div class="row"><div><h3>👥 Daftar User</h3><p class="muted">🟢 ONLINE = sedang login • ⚫ OFFLINE = tidak sedang login • Login akun = riwayat berhasil masuk.</p></div><button id="refresh" style="max-width:130px">↻ Refresh</button></div><div class="grid"><div class="pill" style="background:#102a22;color:#b9ffd8">🟢 ONLINE = login aktif & heartbeat terdeteksi</div><input id="search" placeholder="Cari email / UID..."><div class="pill" id="stats" style="padding:12px">Memuat statistik...</div></div><br><div id="table">Memuat...</div></div><div class="card"><h3>💰 Harga Paket Premium</h3><p class="muted">Harga di sini otomatis dipakai halaman pembelian dan pesan WhatsApp. Harga asli akan dicoret jika harga diskon diisi.</p><div id="pricingEditor"></div><div class="row"><button id="addPricing" style="max-width:220px">➕ Tambah Paket</button><button id="savePricing" style="max-width:220px">💾 Simpan Harga</button></div><p id="pricingMsg" class="muted"></p></div></main></div>
 <script>
