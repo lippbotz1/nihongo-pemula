@@ -1,100 +1,8 @@
 'use strict';
 
-const CACHE = new Map();
-const TTL = 7 * 24 * 60 * 60 * 1000;
-const MAX_CACHE = 200;
-
-function cacheGet(key) {
-  const item = CACHE.get(key);
-  if (!item) return '';
-  if (Date.now() - item.ts > TTL) {
-    CACHE.delete(key);
-    return '';
-  }
-  return item.value;
-}
-
-function cacheSet(key, value) {
-  if (!value) return;
-  CACHE.set(key, { ts: Date.now(), value });
-  while (CACHE.size > MAX_CACHE) {
-    const first = CACHE.keys().next().value;
-    if (first === undefined) break;
-    CACHE.delete(first);
-  }
-}
-
-function latinOnly(value) {
-  if (!value || typeof value !== 'string') return false;
-  const s = value.trim();
-  return !/[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(s) &&
-    /^[A-Za-z0-9\s.,!?"“”‘’'\-:;()\/]+$/.test(s);
-}
-
-function parseTranslation(data) {
-  if (!Array.isArray(data) || !Array.isArray(data[0])) return '';
-  return data[0].map(function (part) {
-    return Array.isArray(part) ? (part[0] || '') : '';
-  }).join('').trim();
-}
-
-function parseRomanization(data) {
-  if (!Array.isArray(data)) return '';
-
-  // Google Translate's unofficial dt=rm response has appeared in more than
-  // one shape. Prefer the dedicated transliteration block (data[2]).
-  const block = data[2];
-  if (Array.isArray(block)) {
-    const parts = block.map(function (item) {
-      if (Array.isArray(item)) return item[0] || '';
-      return typeof item === 'string' ? item : '';
-    }).filter(function (x) { return latinOnly(x); });
-    const joined = parts.join(' ').replace(/\s+/g, ' ').trim();
-    if (joined) return joined;
-  }
-
-  // Older responses put the transliteration marker at the end of data[0].
-  if (Array.isArray(data[0])) {
-    const last = data[0][data[0].length - 1];
-    if (Array.isArray(last) && last[0] === 1 && typeof last[1] === 'string' && latinOnly(last[1])) {
-      return last[1].trim();
-    }
-
-    // Fallback: inspect all nested values, but never accept Japanese text.
-    const candidates = [];
-    function walk(value) {
-      if (typeof value === 'string') {
-        if (latinOnly(value) && value.trim()) candidates.push(value.trim());
-        return;
-      }
-      if (Array.isArray(value)) value.forEach(walk);
-    }
-    data[0].forEach(walk);
-    if (candidates.length) {
-      // The first candidate in normal translation segments is often an
-      // English gloss. Prefer the final candidate, which is the rm block.
-      return candidates[candidates.length - 1];
-    }
-  }
-  return '';
-}
-
-
-function politeJapanese(input, translated) {
-  const raw = String(input || '').trim();
-  const out = String(translated || '').trim();
-  const low = raw.toLowerCase();
-  const nameMatch = raw.match(/(?:nama\s+saya|nama\s+ku|saya\s+bernama)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,40}?)(?=\s+(?:saya|aku)\s+(?:dari|asal)|\s*$)/i);
-  const countryMatch = raw.match(/(?:saya|aku)\s+(?:berasal\s+dari|dari|asal(?:nya)?\s+dari)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ -]{1,40})/i);
-  if (/(?:halo|hai|selamat\s+(?:pagi|siang|sore|malam))/.test(low) &&
-      /(?:perkenalkan|kenalkan|nama\s+saya|bernama)/.test(low) &&
-      nameMatch && countryMatch) {
-    const country = countryMatch[1].trim().toLowerCase().includes('indonesia') ? 'インドネシア' : countryMatch[1].trim();
-    return 'こんにちは、はじめまして。私の名前は' + nameMatch[1].trim() + 'です。' + country + 'から来ました。';
-  }
-  return out.replace(/こんにちは、自己紹介させてください。?/g,'こんにちは、はじめまして。')
-    .replace(/自己紹介させてください。?/g,'はじめまして。');
-}
+const MAX_INPUT = 1600;
+const TIMEOUT_MS = 9000;
+const UNAVAILABLE_NOTE = 'Jika Translate sedang tidak tersedia, coba lagi beberapa saat.';
 
 function sendJson(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -102,93 +10,167 @@ function sendJson(res, status, body) {
   return res.status(status).json(body);
 }
 
+function cleanText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function isJapanese(value) {
+  return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(String(value || ''));
+}
+
+function extractJson(text) {
+  const raw = String(text || '').trim();
+  try { return JSON.parse(raw); } catch (_) {}
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced) {
+    try { return JSON.parse(fenced[1]); } catch (_) {}
+  }
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(raw.slice(start, end + 1)); } catch (_) {}
+  }
+  return null;
+}
+
+function normalizeResult(value, input) {
+  const x = value && typeof value === 'object' ? value : {};
+  const japanese = cleanText(x.japanese);
+  const romaji = cleanText(x.romaji);
+  const meaning = cleanText(x.meaningIndonesia || x.meaning || x.indonesian);
+  if (!japanese || !meaning || !romaji) return null;
+
+  return {
+    translatedText: japanese,
+    romaji,
+    meaning,
+    formality: cleanText(x.formality) || 'Sopan / Polite',
+    explanation: cleanText(x.explanation) || 'Terjemahan AI dengan bentuk bahasa Jepang yang natural dan sopan.',
+    category: cleanText(x.category) || 'Ungkapan / Kosakata',
+    pos: cleanText(x.pos) || '—',
+    form: cleanText(x.form) || '—',
+    jlpt: cleanText(x.jlpt) || 'Tidak ditentukan',
+    alternative: cleanText(x.alternative) || '—',
+    sourceLanguage: isJapanese(input) ? 'ja' : 'id'
+  };
+}
+
+function buildPrompt(input, sl) {
+  const source = sl === 'ja' ? 'Bahasa Jepang' : 'Bahasa Indonesia';
+  const target = sl === 'ja' ? 'Bahasa Indonesia' : 'Bahasa Jepang';
+  return [
+    'Kamu adalah mesin penerjemah dan kamus Bahasa Jepang profesional.',
+    `Bahasa sumber: ${source}. Bahasa tujuan: ${target}.`,
+    'Terjemahkan teks pengguna secara akurat berdasarkan konteks, bukan sekadar kata per kata.',
+    'Untuk output Bahasa Jepang, UTAMAKAN bentuk sopan/natural (丁寧語) kecuali konteks jelas membutuhkan bentuk lain.',
+    'Jika input sudah Bahasa Jepang, pertahankan makna dan berikan bentuk Jepang natural; jika bentuknya kasar/kasual, boleh berikan versi sopan sebagai hasil utama.',
+    'Romaji harus berupa romaji Latin standar dan TIDAK boleh mengandung Hiragana, Katakana, Kanji, atau karakter Jepang.',
+    'meaningIndonesia harus menjelaskan arti dalam Bahasa Indonesia.',
+    'formality wajib menyebut level seperti Kasual / Informal, Netral, Sopan / Polite, Formal, Honorific / 尊敬語, atau Humble / 謙譲語 bila relevan.',
+    'alternative boleh berisi bentuk alternatif singkat; jangan mengarang jika tidak relevan.',
+    'Jawab HANYA JSON valid tanpa markdown.',
+    'Schema persis:',
+    '{"japanese":"...","romaji":"...","meaningIndonesia":"...","formality":"...","explanation":"...","category":"...","pos":"...","form":"...","jlpt":"...","alternative":"..."}',
+    `Teks pengguna: ${JSON.stringify(input)}`
+  ].join('\n');
+}
+
+async function callGemini(input, sl) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw Object.assign(new Error('GEMINI_API_KEY missing'), { provider: 'gemini', status: 503 });
+  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: buildPrompt(input, sl) }] }],
+        generationConfig: { temperature: 0.15, responseMimeType: 'application/json' }
+      })
+    });
+    const text = await response.text();
+    if (!response.ok) throw Object.assign(new Error('Gemini HTTP ' + response.status), { provider: 'gemini', status: response.status });
+    const data = JSON.parse(text);
+    const output = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    const result = normalizeResult(extractJson(output), input);
+    if (!result) throw Object.assign(new Error('Gemini returned invalid translation'), { provider: 'gemini', status: 502 });
+    return result;
+  } finally { clearTimeout(timer); }
+}
+
+async function callGroq(input, sl) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw Object.assign(new Error('GROQ_API_KEY missing'), { provider: 'groq', status: 503 });
+  const model = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model,
+        temperature: 0.15,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: buildPrompt('INPUT_PLACEHOLDER', sl).replace('Teks pengguna: "INPUT_PLACEHOLDER"', 'Teks pengguna diberikan pada pesan berikut.') },
+          { role: 'user', content: input }
+        ]
+      })
+    });
+    const text = await response.text();
+    if (!response.ok) throw Object.assign(new Error('Groq HTTP ' + response.status), { provider: 'groq', status: response.status });
+    const data = JSON.parse(text);
+    const output = data?.choices?.[0]?.message?.content || '';
+    const result = normalizeResult(extractJson(output), input);
+    if (!result) throw Object.assign(new Error('Groq returned invalid translation'), { provider: 'groq', status: 502 });
+    return result;
+  } finally { clearTimeout(timer); }
+}
+
 async function handler(req, res) {
-  // Allow simple browser requests and health checks.
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return res.status(204).end();
   }
+  if (req.method && req.method !== 'GET') return sendJson(res, 405, { error: 'method_not_allowed' });
 
-  if (req.method && req.method !== 'GET') {
-    return sendJson(res, 405, { error: 'method_not_allowed' });
-  }
-
-  const query = req.query || {};
-  const q = String(query.q || '').trim();
-  const sl = String(query.sl || 'id').trim().toLowerCase();
-  const tl = String(query.tl || 'ja').trim().toLowerCase();
-  const mode = String(query.mode || 'translate').trim().toLowerCase();
-
+  const q = cleanText(req.query?.q);
+  const sl = String(req.query?.sl || '').toLowerCase();
+  const tl = String(req.query?.tl || '').toLowerCase();
   if (!q) return sendJson(res, 400, { error: 'q_is_required' });
-  if (!['id', 'ja'].includes(sl) || !['id', 'ja'].includes(tl)) {
+  if (q.length > MAX_INPUT) return sendJson(res, 413, { error: 'q_too_long', message: 'Teks terlalu panjang.' });
+  if (!['id', 'ja'].includes(sl) || !['id', 'ja'].includes(tl) || sl === tl) {
     return sendJson(res, 400, { error: 'unsupported_language_pair' });
   }
-  if (!['translate', 'romaji'].includes(mode)) {
-    return sendJson(res, 400, { error: 'unsupported_mode' });
-  }
 
-  const key = mode + '|' + sl + '|' + tl + '|' + q;
-  const cached = cacheGet(key);
-  if (cached) {
-    return sendJson(res, 200, mode === 'romaji'
-      ? { romaji: cached }
-      : { translatedText: cached });
-  }
-
+  // AI-only: Gemini first, Groq second. No local dictionary, Google Translate,
+  // MyMemory, offline translation, or cached translation is used here.
   try {
-    if (mode === 'romaji') {
-      if (sl !== 'ja') return sendJson(res, 400, { error: 'romaji_requires_japanese' });
-
-      const url = 'https://translate.googleapis.com/translate_a/single' +
-        '?client=gtx&sl=ja&tl=en&dt=t&dt=rm&q=' + encodeURIComponent(q);
-
-      const response = await fetch(url, {
-        headers: { accept: 'application/json' }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const romaji = parseRomanization(data);
-        if (romaji && latinOnly(romaji)) {
-          cacheSet(key, romaji);
-          return sendJson(res, 200, { romaji: romaji });
+    const result = await callGemini(q, sl);
+    return sendJson(res, 200, { ...result, provider: 'gemini', available: true });
+  } catch (geminiError) {
+    try {
+      const result = await callGroq(q, sl);
+      return sendJson(res, 200, { ...result, provider: 'groq', available: true });
+    } catch (groqError) {
+      return sendJson(res, 503, {
+        error: 'translate_unavailable',
+        available: false,
+        message: UNAVAILABLE_NOTE,
+        providers: {
+          gemini: geminiError?.status || 503,
+          groq: groqError?.status || 503
         }
-      }
-
-      // Do not return Japanese text as a fake romaji result.
-      return sendJson(res, 200, { romaji: '' });
+      });
     }
-
-    if (sl === tl) {
-      return sendJson(res, 200, { translatedText: q });
-    }
-
-    const url = 'https://translate.googleapis.com/translate_a/single' +
-      '?client=gtx&sl=' + encodeURIComponent(sl) +
-      '&tl=' + encodeURIComponent(tl) +
-      '&dt=t&q=' + encodeURIComponent(q);
-
-    const response = await fetch(url, {
-      headers: { accept: 'application/json' }
-    });
-
-    if (!response.ok) {
-      return sendJson(res, 502, { error: 'translation_provider_unavailable' });
-    }
-
-    const data = await response.json();
-    const translated = parseTranslation(data);
-    if (!translated) {
-      return sendJson(res, 502, { error: 'translation_unavailable' });
-    }
-
-    const polished = (sl === 'id' && tl === 'ja') ? politeJapanese(q, translated) : translated;
-    cacheSet(key, polished);
-    return sendJson(res, 200, { translatedText: polished });
-  } catch (error) {
-    return sendJson(res, 502, { error: 'translation_service_unavailable' });
   }
 }
 
