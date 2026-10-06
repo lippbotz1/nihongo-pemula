@@ -540,6 +540,66 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   z-index:1 !important;
 }
 </style>
+
+<style id="premium-preview-style">
+/* Premium Preview — hanya contoh tampilan, tidak membuka akses Premium */
+.preview-btn{
+  width:100%; margin-top:10px; padding:12px 14px; border-radius:14px;
+  border:1px solid rgba(96,170,255,.35); background:rgba(36,102,190,.16);
+  color:#dcebff; font-weight:800; cursor:pointer; font-size:14px;
+}
+.preview-btn:active{transform:scale(.98)}
+.preview-modal{
+  position:fixed; inset:0; z-index:99999; display:none;
+  background:rgba(3,8,20,.82); backdrop-filter:blur(8px);
+  overflow:auto; padding:18px 12px 34px;
+}
+.preview-modal.show{display:block}
+.preview-sheet{
+  max-width:720px; margin:0 auto; min-height:100%;
+  background:linear-gradient(180deg,#101d38,#0b1428);
+  border:1px solid rgba(110,174,255,.25); border-radius:22px;
+  box-shadow:0 20px 70px rgba(0,0,0,.5); padding:18px;
+}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.preview-head h2{margin:0;font-size:20px;color:#fff}
+.preview-close{
+  border:0;border-radius:12px;padding:9px 12px;background:#203252;color:#fff;
+  font-weight:800;cursor:pointer
+}
+.preview-note{
+  padding:11px 13px;border-radius:13px;background:rgba(44,125,231,.12);
+  border:1px solid rgba(90,160,255,.2);color:#bcd5f6;font-size:13px;line-height:1.5;
+}
+.preview-section{
+  margin-top:14px;padding:15px;border-radius:17px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(110,174,255,.14)
+}
+.preview-section h3{margin:0 0 11px;color:#75b8ff;font-size:14px}
+.preview-kana{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.preview-kana div{
+  text-align:center;padding:10px 5px;border-radius:11px;background:#17243e;
+  border:1px solid rgba(110,174,255,.12)
+}
+.preview-kana b{display:block;font-size:22px;color:#fff}.preview-kana small{color:#a9c5e8}
+.preview-card{
+  padding:13px;border-radius:14px;background:#17243e;border:1px solid rgba(110,174,255,.12);
+  margin-top:9px
+}
+.preview-card strong{display:block;color:#fff;font-size:18px}.preview-card .romaji{color:#ffd76a;margin-top:5px;font-weight:800}
+.preview-card p{margin:6px 0 0;color:#b8c9df;font-size:13px}
+.preview-lock{
+  margin-top:14px;text-align:center;padding:13px;border-radius:14px;
+  background:rgba(255,193,7,.08);border:1px dashed rgba(255,193,7,.3);color:#ffe29a;
+  font-size:13px
+}
+.preview-buy{
+  display:block;text-align:center;text-decoration:none;margin-top:12px;padding:13px;border-radius:14px;
+  background:linear-gradient(90deg,#347ff2,#39b7ff);color:#fff;font-weight:900
+}
+@media(max-width:420px){.preview-kana{grid-template-columns:repeat(4,1fr)}}
+</style>
+
 </head>
 <body>
 
@@ -564,6 +624,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         </div>
         <div class="price-table" id="priceTable"><div class="price-table-header">💎 Pilih Paket Premium</div></div>
         <a href="#" class="btn-wa" id="waBtn" target="_blank">📱 Beli via WhatsApp</a>
+        <button class="preview-btn" id="openPreviewBtn">👀 Lihat Preview Isi Premium</button>
         <button class="btn-login-link" id="openLoginBtn">🔑 Sudah punya akun? Login di sini</button>
       </div>
       <div class="reviews-section" id="reviewsSection" style="display:none">
@@ -583,6 +644,55 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         <button class="btn-back-store" id="backToStoreBtn">← Kembali ke Toko</button>
       </div>
     </div>
+  </div>
+</div>
+
+
+<div class="preview-modal" id="premiumPreviewModal" aria-hidden="true">
+  <div class="preview-sheet">
+    <div class="preview-head">
+      <h2>👀 Preview Isi Nihongo Premium</h2>
+      <button class="preview-close" id="closePreviewBtn">✕ Tutup</button>
+    </div>
+    <div class="preview-note">
+      Ini <b>preview tampilan</b> supaya calon pembeli bisa melihat isi dan gaya belajar Premium.
+      Preview tidak membuka seluruh materi Premium.
+    </div>
+
+    <div class="preview-section">
+      <h3>あ HIRAGANA — Contoh Materi</h3>
+      <div class="preview-kana">
+        <div><b>あ</b><small>a</small></div><div><b>い</b><small>i</small></div>
+        <div><b>う</b><small>u</small></div><div><b>え</b><small>e</small></div>
+        <div><b>お</b><small>o</small></div>
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <h3>漢 KANJI — Contoh Kosakata</h3>
+      <div class="preview-card"><strong>学生</strong><div class="romaji">gakusei</div><p>🇮🇩 Pelajar / siswa · JLPT N5</p></div>
+      <div class="preview-card"><strong>先生</strong><div class="romaji">sensei</div><p>🇮🇩 Guru · panggilan sopan</p></div>
+    </div>
+
+    <div class="preview-section">
+      <h3>💬 FRASE — Contoh</h3>
+      <div class="preview-card"><strong>ありがとうございます</strong><div class="romaji">arigatou gozaimasu</div><p>🇮🇩 Terima kasih · sopan</p></div>
+      <div class="preview-card"><strong>はじめまして</strong><div class="romaji">hajimemashite</div><p>🇮🇩 Salam saat pertama kali bertemu</p></div>
+    </div>
+
+    <div class="preview-section">
+      <h3>📖 GRAMMAR — Contoh</h3>
+      <div class="preview-card"><strong>〜です</strong><div class="romaji">~ desu</div><p>Digunakan untuk membuat pernyataan yang sopan.</p></div>
+      <div class="preview-card"><strong>〜ます</strong><div class="romaji">~ masu</div><p>Bentuk sopan pada kata kerja.</p></div>
+    </div>
+
+    <div class="preview-section">
+      <h3>🎌 KESOPANAN — Contoh</h3>
+      <div class="preview-card"><strong>Casual → Polite</strong><div class="romaji">やあ → こんにちは</div><p>Contoh perbedaan gaya bicara sesuai situasi.</p></div>
+    </div>
+
+    <div class="preview-lock">🔒 Materi lengkap, quiz, checklist, flashcard, dan seluruh database pembelajaran tetap terkunci sampai Premium aktif.</div>
+    <a class="preview-buy" id="previewBuyBtn" href="#">💎 Lihat Paket Premium</a>
   </div>
 </div>
 
@@ -848,13 +958,16 @@ let loginHistoryRef = null;
 async function recordLogin(user) {
   if (!firebaseDB || !user || !user.uid) return;
   try {
-    loginHistoryRef = firebaseDB.ref('login_history/' + user.uid);
-    await loginHistoryRef.transaction(v => ({
+    const ref = firebaseDB.ref('login_history/' + user.uid);
+    const snap = await ref.once('value');
+    const old = snap.val() || {};
+    const now = Date.now();
+    await ref.set({
       hasLoggedIn: true,
-      firstLoginAt: v && v.firstLoginAt ? v.firstLoginAt : firebase.database.ServerValue.TIMESTAMP,
-      lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
-      email: user.email || (v && v.email) || ''
-    }));
+      firstLoginAt: old.firstLoginAt ? Number(old.firstLoginAt) : now,
+      lastLoginAt: now,
+      email: user.email || old.email || ''
+    });
   } catch(e) { console.warn('Login history:', e); }
 }
 let presenceTimer = null;
@@ -2014,6 +2127,26 @@ document.getElementById('resultCopyBtn')?.addEventListener('click',async()=>{con
 document.getElementById('resultFavBtn')?.addEventListener('click',()=>{const x=currentTranslationState;if(!x)return;const k=jlKey(x.jp);jlFav.has(k)?jlFav.delete(k):jlFav.add(k);jlSave(JL_FAV,[...jlFav]);const b=document.getElementById('resultFavBtn');b.textContent=jlFav.has(k)?'⭐ Favorit tersimpan':'☆ Favorit'});
 document.getElementById('resultLearnBtn')?.addEventListener('click',()=>{const x=currentTranslationState;if(!x)return;document.querySelector('[data-tab="upgrade"]')?.click();setTimeout(()=>{const inp=document.getElementById('vocabSearch');if(inp){inp.value=x.jp;renderVocabList(x.jp)}},80)});
 document.getElementById('resultAltBtn')?.addEventListener('click',()=>{const b=document.getElementById('formalityBox');if(b){b.classList.toggle('show');b.scrollIntoView({behavior:'smooth',block:'nearest'})}});
+
+
+/* PREMIUM PREVIEW — demo tampilan tanpa membuka akses Premium */
+(function initPremiumPreview(){
+  const modal=document.getElementById('premiumPreviewModal');
+  const open=document.getElementById('openPreviewBtn');
+  const close=document.getElementById('closePreviewBtn');
+  const buy=document.getElementById('previewBuyBtn');
+  if(!modal||!open) return;
+  const hide=()=>{modal.classList.remove('show');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';};
+  const show=()=>{modal.classList.add('show');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';};
+  open.addEventListener('click',show);
+  close?.addEventListener('click',hide);
+  modal.addEventListener('click',e=>{if(e.target===modal)hide();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show'))hide();});
+  buy?.addEventListener('click',e=>{
+    e.preventDefault(); hide();
+    document.getElementById('priceTable')?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+})();
 
 /* INIT */
 async function init() {
