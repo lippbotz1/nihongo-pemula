@@ -17,6 +17,8 @@ body>*{position:relative;z-index:1}
 .premium-gate.hidden{display:none}
 .gate-container{max-width:520px;width:100%;margin:auto;padding:20px 0}
 .gate-card{background:linear-gradient(145deg,rgba(20,28,48,.98),rgba(15,20,36,.98));border:1px solid var(--border-bright);border-radius:28px;padding:32px 28px;text-align:center;position:relative;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);margin-bottom:16px}
+.premium-back-btn{position:absolute;top:16px;left:16px;z-index:2;display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border-bright);border-radius:999px;background:rgba(255,255,255,.045);color:var(--text-soft);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}.premium-back-btn:hover{background:rgba(94,167,255,.12);border-color:rgba(94,167,255,.38)}.premium-back-btn:active{transform:scale(.97)}
+@media(max-width:420px){.premium-back-btn{top:12px;left:12px;padding:7px 10px;font-size:10px}.gate-card{padding-top:42px}}
 .gate-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--gg)}
 .gate-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:rgba(94,167,255,.12);border:1px solid rgba(94,167,255,.35);border-radius:100px;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:16px}
 .gate-card h2{font-size:28px;font-weight:900;margin-bottom:6px;background:linear-gradient(180deg,#fff 0%,#b8c0d8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -552,6 +554,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   <div class="gate-container">
     <div id="storePage">
       <div class="gate-card">
+        <button class="premium-back-btn" id="premiumBackBtn" type="button" aria-label="Kembali ke halaman sebelumnya">← Kembali</button>
         <div class="gate-badge">⭐ Premium Access</div>
         <h2>Nihongo Dasar Premium</h2>
         <p class="subtitle">Buka materi lengkap Nihongo Dasar Premium</p>
@@ -959,9 +962,58 @@ async function login(email, password) {
   }
 }
 async function logout() { const email = currentUser && currentUser.email; await clearPresence(); stopWatchers(); if (email) await clearDeviceLock(email); try { if (firebaseAuth) await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); }
-function showGate() { document.getElementById('premiumGate').style.display = 'flex'; document.getElementById('mainApp').classList.remove('blurred'); document.getElementById('storePage').style.display='block'; document.getElementById('loginPage').classList.remove('show'); }
-function showApp() { document.getElementById('premiumGate').style.display = 'none'; document.getElementById('mainApp').classList.remove('blurred'); renderAkun(); }
-function requirePremium(feature){ if(isLoggedIn()) return true; showGate(); const title=document.querySelector('#storePage .gate-card h2'); if(title) title.textContent='Nihongo Dasar Premium'; const sub=document.querySelector('#storePage .gate-card .subtitle'); if(sub) sub.textContent='Fitur '+(feature||'ini')+' tersedia untuk akun Premium.'; return false; }
+let premiumGateHistoryActive = false;
+let premiumGateReturnTab = 'belajar';
+function getActiveMainTab(){ const active=document.querySelector('#mainTabs .tab-btn.active'); return active?.dataset.tab || 'belajar'; }
+function restoreMainTab(tab){ const btn=document.querySelector('#mainTabs .tab-btn[data-tab="'+String(tab||'belajar').replace(/"/g,'')+'"]'); if(btn) btn.click(); else document.querySelector('#mainTabs .tab-btn[data-tab="belajar"]')?.click(); }
+function openPremiumHistoryState(){
+  if (premiumGateHistoryActive) return;
+  premiumGateReturnTab = getActiveMainTab();
+  try { history.pushState({ nihongoPremiumGate:true, returnTab:premiumGateReturnTab }, '', location.href); premiumGateHistoryActive = true; }
+  catch(e) { premiumGateHistoryActive = false; }
+}
+function closePremiumGate(fromPopState=false){
+  const gate=document.getElementById('premiumGate');
+  if(!gate) return;
+  gate.style.display='none';
+  document.getElementById('storePage').style.display='block';
+  document.getElementById('loginPage').classList.remove('show');
+  if(!fromPopState && premiumGateHistoryActive){
+    premiumGateHistoryActive=false;
+    try { history.back(); } catch(e) {}
+  } else if(fromPopState){
+    premiumGateHistoryActive=false;
+  }
+  restoreMainTab(premiumGateReturnTab);
+}
+function showGate(){
+  const gate=document.getElementById('premiumGate');
+  gate.style.display='flex';
+  document.getElementById('mainApp').classList.remove('blurred');
+  document.getElementById('storePage').style.display='block';
+  document.getElementById('loginPage').classList.remove('show');
+  openPremiumHistoryState();
+}
+function showApp(){
+  document.getElementById('premiumGate').style.display='none';
+  document.getElementById('mainApp').classList.remove('blurred');
+  if(premiumGateHistoryActive){ premiumGateHistoryActive=false; try{ history.replaceState(null,'',location.href); }catch(e){} }
+  renderAkun();
+}
+function requirePremium(feature){
+  if(isLoggedIn()) return true;
+  premiumGateReturnTab=getActiveMainTab();
+  showGate();
+  const title=document.querySelector('#storePage .gate-card h2'); if(title) title.textContent='Nihongo Dasar Premium';
+  const sub=document.querySelector('#storePage .gate-card .subtitle'); if(sub) sub.textContent='Fitur '+(feature||'ini')+' tersedia untuk akun Premium.';
+  return false;
+}
+window.addEventListener('popstate', function(e){
+  const gate=document.getElementById('premiumGate');
+  if(gate && gate.style.display!=='none' && premiumGateHistoryActive){
+    closePremiumGate(true);
+  }
+});
 async function checkAutoLogin() {
   // Firebase Auth LOCAL adalah sumber sesi yang sebenarnya. Jangan pernah
   // meminta password ulang hanya karena halaman baru selesai dimuat.
@@ -1134,6 +1186,7 @@ function initGate() {
       }
     }
   }
+  document.getElementById('premiumBackBtn')?.addEventListener('click', () => closePremiumGate(false));
   document.getElementById('doLoginBtn').addEventListener('click', doLogin);
   document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   document.getElementById('akunLogoutBtn').addEventListener('click', () => { if (confirm('Yakin logout?')) logout(); });
