@@ -11,6 +11,24 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#081224;--card:rgba(20,28,48,.6);--border:rgba(140,160,220,.1);--border-bright:rgba(140,160,220,.25);--text:#eef1f8;--text-dim:#91a8c8;--text-soft:#c0c8dc;--amber:#7dc0ff;--indigo:#5ea7ff;--mint:#5ac8fa;--rose:#60a5fa;--violet:#72a7ff;--gp:linear-gradient(135deg,#5ea7ff 0%,#39c8ff 100%);--gg:linear-gradient(135deg,#7dc0ff 0%,#4f8cff 100%);--ge:linear-gradient(135deg,#5ac8fa 0%,#258bd8 100%);--gv:linear-gradient(135deg,#72a7ff 0%,#3f6fe5 100%)}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px;min-height:100vh;overflow-x:hidden}
+/* ===== FREE vs PREMIUM: completely separated learning surfaces ===== */
+.free-user .premium-main-tab,.free-user .premium-learn-tab{display:none!important}
+.free-user #quizTabs .premium-quiz-tab{display:none!important}
+.free-user .premium-learn-content{display:none!important}
+.free-user .premium-only-ui{display:none!important}
+.premium-user .free-only-ui{display:none!important}
+.premium-user .free-vocab-card{display:none!important}
+.free-access-panel,.premium-access-panel{margin:0 0 16px;padding:18px;border-radius:18px;border:1px solid var(--border-bright);background:linear-gradient(145deg,rgba(94,167,255,.10),rgba(255,255,255,.025));box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.free-access-panel h3,.premium-access-panel h3{font-size:16px;margin-bottom:4px}
+.free-access-panel p,.premium-access-panel p{font-size:12px;color:var(--text-dim);margin:0}
+.free-access-panel .free-label{display:inline-flex;padding:4px 9px;border-radius:999px;background:rgba(90,200,250,.14);border:1px solid rgba(90,200,250,.3);color:#7dc0ff;font-size:9px;font-weight:900;letter-spacing:1px;margin-bottom:8px}
+.premium-access-panel .premium-label{display:inline-flex;padding:4px 9px;border-radius:999px;background:rgba(94,167,255,.14);border:1px solid rgba(94,167,255,.35);color:#7dc0ff;font-size:9px;font-weight:900;letter-spacing:1px;margin-bottom:8px}
+.free-premium-cta{margin-top:12px;width:100%;padding:11px 14px;border:0;border-radius:12px;background:var(--gp);color:#081224;font:800 12px inherit;cursor:pointer}
+/* All learning cards with Japanese text are tappable for TTS. */
+.kana-item,.kanji-item,.phrase-row,.grammar-box,.formality-item,.vocab-item,.history-item-row{cursor:pointer;touch-action:manipulation}
+.tts-active{animation:learningCardFloat .34s ease-out both!important}
+@media(max-width:640px){.free-access-panel,.premium-access-panel{padding:15px}.free-access-panel h3,.premium-access-panel h3{font-size:15px}}
+
 body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 900px 600px at 12% -5%,rgba(94,167,255,.15),transparent 55%),radial-gradient(ellipse 800px 600px at 88% 8%,rgba(94,167,255,.12),transparent 55%);pointer-events:none;z-index:0}
 body>*{position:relative;z-index:1}
 .premium-gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;background:rgba(10,14,26,.92);backdrop-filter:blur(20px);padding:20px;overflow-y:auto}
@@ -593,10 +611,10 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 <div class="tabs" id="mainTabs">
   <button class="tab-btn active" data-tab="belajar"><span>📚</span> Belajar</button>
   <button class="tab-btn" data-tab="kuis"><span>🎯</span> Quiz</button>
-  <button class="tab-btn" data-tab="translate"><span>🔍</span> Translate</button>
+  <button class="tab-btn premium-main-tab" data-tab="translate"><span>🔍</span> Translate</button>
   <button class="tab-btn" data-tab="checklist"><span>📋</span> Checklist</button>
-  <button class="tab-btn" data-tab="upgrade"><span>🏠</span> Dashboard</button>
-  <button class="tab-btn" data-tab="pengaturan"><span>⚙️</span> Pengaturan</button>
+  <button class="tab-btn premium-main-tab" data-tab="upgrade"><span>🏠</span> Dashboard</button>
+  <button class="tab-btn premium-main-tab" data-tab="pengaturan"><span>⚙️</span> Pengaturan</button>
 </div>
 
 <div id="tab-belajar" class="tab-content active">
@@ -609,25 +627,27 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div class="learn-tabs" id="learnTabs">
       <button class="learn-tab active" data-learn="hiragana">あ Hiragana</button>
       <button class="learn-tab" data-learn="katakana">ア Katakana</button>
-      <button class="learn-tab" data-learn="kanji">漢 Kanji</button>
-      <button class="learn-tab" data-learn="frasa">💬 Frasa</button>
-      <button class="learn-tab" data-learn="angka">🔢 Angka</button>
-      <button class="learn-tab" data-learn="waktu">🕐 Waktu</button>
-      <button class="learn-tab" data-learn="grammar">📖 Grammar</button>
-      <button class="learn-tab" data-learn="kesopanan">🎌 Kesopanan</button>
+      <button class="learn-tab premium-learn-tab" data-learn="kanji">漢 Kanji</button>
+      <button class="learn-tab premium-learn-tab" data-learn="frasa">💬 Frasa</button>
+      <button class="learn-tab premium-learn-tab" data-learn="angka">🔢 Angka</button>
+      <button class="learn-tab premium-learn-tab" data-learn="waktu">🕐 Waktu</button>
+      <button class="learn-tab premium-learn-tab" data-learn="grammar">📖 Grammar</button>
+      <button class="learn-tab premium-learn-tab" data-learn="kesopanan">🎌 Kesopanan</button>
     </div>
+    <div class="free-access-panel free-only-ui" id="freeAccessPanel"><span class="free-label">FREE ACCESS</span><h3>📘 Mode Belajar Gratis</h3><p>Hiragana, Katakana, kosakata dasar, dan quiz dasar tersedia untuk kamu coba.</p><button class="free-premium-cta" id="freePremiumCta">💎 Lihat Nihongo Dasar Premium</button></div>
+    <div class="premium-access-panel premium-only-ui" id="premiumAccessPanel"><span class="premium-label">PREMIUM ACTIVE</span><h3>💎 Mode Premium Aktif</h3><p>Semua materi premium ditampilkan terpisah: Kanji, Frasa, Angka, Waktu, Grammar, Kesopanan, dan materi lengkap lainnya.</p></div>
     <div id="learn-hiragana" class="learn-content active"><div class="lesson-card"><h3>あ Hiragana</h3><p>Hiragana untuk kata asli Jepang, partikel, akhiran kata kerja.</p><h4>Karakter Dasar</h4><div class="kana-grid" id="hiraganaGrid"></div><h4>Dakuten</h4><div class="kana-grid" id="hiraganaDakuten"></div></div></div><div class="lesson-card free-vocab-card"><span class="free-badge">FREE</span><h3>📚 Kosakata Dasar — Preview Gratis</h3><p>Kenali sebagian kosakata sebelum membuka seluruh koleksi Premium.</p><div id="freeVocabList" class="vocab-list"></div></div>
     <div id="learn-katakana" class="learn-content"><div class="lesson-card"><h3>ア Katakana</h3><p>Katakana untuk kata serapan asing.</p><h4>Karakter Dasar</h4><div class="kana-grid" id="katakanaGrid"></div><h4>Dakuten</h4><div class="kana-grid" id="katakanaDakuten"></div></div></div>
-    <div id="learn-kanji" class="learn-content"><div class="lesson-card"><h3>漢 Kanji</h3><p>Kanji dasar pemula.</p><div class="kanji-grid" id="kanjiGrid"></div></div></div>
-    <div id="learn-frasa" class="learn-content"><div class="lesson-card"><h3>💬 Frasa</h3><div id="frasaList"></div></div></div>
-    <div id="learn-angka" class="learn-content"><div class="lesson-card"><h3>🔢 Angka</h3><div id="angkaList"></div></div></div>
-    <div id="learn-waktu" class="learn-content"><div class="lesson-card"><h3>🕐 Hari</h3><div id="hariList"></div></div></div>
-    <div id="learn-grammar" class="learn-content"><div class="lesson-card"><h3>📖 Grammar</h3>
+    <div id="learn-kanji" class="learn-content premium-learn-content"><div class="lesson-card"><h3>漢 Kanji</h3><p>Kanji dasar pemula.</p><div class="kanji-grid" id="kanjiGrid"></div></div></div>
+    <div id="learn-frasa" class="learn-content premium-learn-content"><div class="lesson-card"><h3>💬 Frasa</h3><div id="frasaList"></div></div></div>
+    <div id="learn-angka" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🔢 Angka</h3><div id="angkaList"></div></div></div>
+    <div id="learn-waktu" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🕐 Hari</h3><div id="hariList"></div></div></div>
+    <div id="learn-grammar" class="learn-content premium-learn-content"><div class="lesson-card"><h3>📖 Grammar</h3>
       <div class="grammar-box" data-speak="私は学生です。"><div class="pattern">A は B です</div><div class="meaning">A adalah B</div><div class="example"><span class="jp">私は学生です。</span><span class="dim">Watashi wa gakusei desu.</span></div></div>
       <div class="grammar-box" data-speak="水をください。"><div class="pattern">～をください</div><div class="meaning">Tolong beri ~</div><div class="example"><span class="jp">水をください。</span><span class="dim">Mizu o kudasai.</span></div></div>
       <div class="grammar-box" data-speak="日本へ行きたいです。"><div class="pattern">～たいです</div><div class="meaning">Saya ingin ~</div><div class="example"><span class="jp">日本へ行きたいです。</span><span class="dim">Nihon e ikitai desu.</span></div></div>
     </div></div>
-    <div id="learn-kesopanan" class="learn-content"><div class="lesson-card"><h3>🎌 Tingkat Kesopanan</h3><p>Klik kartu untuk mendengar.</p><div id="kesopananList"></div></div></div>
+    <div id="learn-kesopanan" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🎌 Tingkat Kesopanan</h3><p>Klik kartu untuk mendengar.</p><div id="kesopananList"></div></div></div>
   </div>
 </div>
 
@@ -658,9 +678,9 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="learn-tabs" style="margin-bottom:0" id="quizTabs">
         <button class="learn-tab active" data-quiz="hiragana">あ</button>
         <button class="learn-tab" data-quiz="katakana">ア</button>
-        <button class="learn-tab" data-quiz="kanji">漢</button>
-        <button class="learn-tab" data-quiz="frasa">💬</button>
-        <button class="learn-tab" data-quiz="kosakata">📚</button><button class="learn-tab" data-quiz="romaji">🔤</button><button class="learn-tab" data-quiz="arti">🇮🇩</button><button class="learn-tab" data-quiz="kana">🈁</button>
+        <button class="learn-tab premium-quiz-tab" data-quiz="kanji">漢</button>
+        <button class="learn-tab premium-quiz-tab" data-quiz="frasa">💬</button>
+        <button class="learn-tab premium-quiz-tab" data-quiz="kosakata">📚</button><button class="learn-tab premium-quiz-tab" data-quiz="romaji">🔤</button><button class="learn-tab premium-quiz-tab" data-quiz="arti">🇮🇩</button><button class="learn-tab premium-quiz-tab" data-quiz="kana">🈁</button>
       </div>
     </div>
     <div class="quiz-container">
@@ -937,6 +957,37 @@ function stopWatchers() { if (presenceTimer) { clearInterval(presenceTimer); pre
 function startDeviceWatcher(email) { if (!firebaseDB || !email) return; if (deviceWatcherTimer) clearInterval(deviceWatcherTimer); const deviceId = getDeviceId(); deviceWatcherTimer = setInterval(async () => { try { const key = email.replace(/\./g, ','); const snap = await firebaseDB.ref('device_lock/' + key).once('value'); const data = snap.val(); if (!data || data.deviceId !== deviceId) { if (currentUser && currentUser.email === email) { alert('⚠️ Sesi berakhir.'); await clearPresence(); stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); } } } catch (e) {} }, 30000); }
 function startLicenseWatcher() { if (licenseWatcherTimer) clearInterval(licenseWatcherTimer); licenseWatcherTimer = setInterval(async () => { if (!currentUser) return; const lic = await loadLicense(currentUser); if (!getLicenseActive(lic)) { await clearPresence(); stopWatchers(); try { await firebaseAuth.signOut(); } catch (e) {} currentUser = null; currentLicense = null; showGate(); alert('⚠️ Lisensi Premium sudah tidak aktif atau kedaluwarsa.'); } else { currentLicense = lic; if (document.getElementById('pengaturan')?.classList.contains('active')) renderAkun(); } }, 15000); }
 function isLoggedIn() { return !!currentUser && getLicenseActive(currentLicense); }
+function updateAccessUI(){
+  const premium = isLoggedIn();
+  document.body.classList.toggle('premium-user', premium);
+  document.body.classList.toggle('free-user', !premium);
+  const learnTabs=document.querySelectorAll('#learnTabs .learn-tab');
+  learnTabs.forEach(b=>b.classList.toggle('premium-learn-tab', premiumLearnTypes.has(b.dataset.learn)));
+  if(!premium){
+    const active=document.querySelector('#learnTabs .learn-tab.active');
+    if(active && premiumLearnTypes.has(active.dataset.learn)){
+      document.querySelectorAll('#learnTabs .learn-tab').forEach(b=>b.classList.remove('active'));
+      const freeBtn=document.querySelector('#learnTabs .learn-tab[data-learn="hiragana"]');
+      freeBtn?.classList.add('active');
+      document.querySelectorAll('.learn-content').forEach(c=>c.classList.remove('active'));
+      document.getElementById('learn-hiragana')?.classList.add('active');
+    }
+    const quizActive=document.querySelector('#quizTabs .learn-tab.active');
+    if(quizActive && !FREE_QUIZ_TYPES.has(quizActive.dataset.quiz)){
+      document.querySelectorAll('#quizTabs .learn-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelector('#quizTabs .learn-tab[data-quiz="hiragana"]')?.classList.add('active');
+      startQuiz('hiragana');
+    }
+    const currentMain=document.querySelector('#mainTabs .tab-btn.active');
+    if(currentMain?.classList.contains('premium-main-tab')){
+      document.querySelectorAll('#mainTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelector('#mainTabs .tab-btn[data-tab="belajar"]')?.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      document.getElementById('tab-belajar')?.classList.add('active');
+    }
+  }
+}
+
 async function login(email, password) {
   try {
     if (!firebaseAuth) return { ok: false, msg: 'Firebase Auth belum tersedia.' };
@@ -995,6 +1046,7 @@ function showGate(){
   openPremiumHistoryState();
 }
 function showApp(){
+  updateAccessUI();
   document.getElementById('premiumGate').style.display='none';
   document.getElementById('mainApp').classList.remove('blurred');
   if(premiumGateHistoryActive){ premiumGateHistoryActive=false; try{ history.replaceState(null,'',location.href); }catch(e){} }
@@ -1019,6 +1071,7 @@ async function checkAutoLogin() {
   // meminta password ulang hanya karena halaman baru selesai dimuat.
   document.getElementById('premiumGate').style.display='none';
   document.getElementById('mainApp').classList.remove('blurred');
+  updateAccessUI();
   if (!firebaseAuth) return;
   try {
     await authPersistenceReady;
@@ -1187,6 +1240,7 @@ function initGate() {
     }
   }
   document.getElementById('premiumBackBtn')?.addEventListener('click', () => closePremiumGate(false));
+  document.getElementById('freePremiumCta')?.addEventListener('click', () => { premiumGateReturnTab=getActiveMainTab(); showGate(); });
   document.getElementById('doLoginBtn').addEventListener('click', doLogin);
   document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   document.getElementById('akunLogoutBtn').addEventListener('click', () => { if (confirm('Yakin logout?')) logout(); });
@@ -1279,6 +1333,23 @@ function updateVoiceUI() {
     vf.style.cssText = 'padding:8px 14px;font-size:11px;' + (currentVoiceGender === 'female' ? 'border-color:var(--indigo);color:#7dc0ff' : '');
   }
 }
+/* Universal Japanese TTS: every learning card can be tapped. */
+document.addEventListener('click', function(e){
+  const target=e.target.closest?.('[data-speak],[data-free-speak]');
+  if(!target) return;
+  if(target.matches('button,a,input,textarea,select') && !target.hasAttribute('data-speak') && !target.hasAttribute('data-free-speak')) return;
+  const text=(target.getAttribute('data-speak') || target.getAttribute('data-free-speak') || '').trim();
+  if(!text) return;
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('.tts-active').forEach(x=>x.classList.remove('tts-active'));
+  target.classList.remove('tts-active');
+  void target.offsetWidth;
+  target.classList.add('tts-active');
+  setTimeout(()=>target.classList.remove('tts-active'),650);
+  speak(text);
+}, true);
+
 document.getElementById('voiceMainBtn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('voicePicker').classList.toggle('show'); });
 document.getElementById('voiceMaleOpt').addEventListener('click', () => { currentVoiceGender = 'male'; localStorage.setItem('voice_gender','male'); updateVoiceUI(); document.getElementById('voicePicker').classList.remove('show'); });
 document.getElementById('voiceFemaleOpt').addEventListener('click', () => { currentVoiceGender = 'female'; localStorage.setItem('voice_gender','female'); updateVoiceUI(); document.getElementById('voicePicker').classList.remove('show'); });
@@ -1690,8 +1761,8 @@ function toggleFavorite(jp){const k=jlKey(jp);jlFav.has(k)?jlFav.delete(k):jlFav
 function markMastered(){if(!window.JL_CURRENT)return;jlMaster.add(jlKey(window.JL_CURRENT.japanese));jlSave(JL_MASTER,[...jlMaster]);renderDash();nextFlash()}
 document.getElementById('vocabSearchBtn').addEventListener('click',()=>renderVocabList(document.getElementById('vocabSearch').value));
 document.getElementById('vocabSearch').addEventListener('input',e=>renderVocabList(e.target.value));
-document.getElementById('vocabList').addEventListener('click',e=>{const f=e.target.closest('[data-fav]');const sp=e.target.closest('[data-speak]');if(f)toggleFavorite(f.dataset.fav);if(sp)speak(sp.dataset.speak)});
-document.getElementById('freeVocabList')?.addEventListener('click',e=>{const sp=e.target.closest('[data-free-speak]');if(sp)speak(sp.dataset.freeSpeak)});
+document.getElementById('vocabList').addEventListener('click',e=>{const f=e.target.closest('[data-fav]');if(f){e.stopPropagation();toggleFavorite(f.dataset.fav);}});
+document.getElementById('freeVocabList')?.addEventListener('click',e=>{const sp=e.target.closest('[data-free-speak]');if(sp)e.stopPropagation();});
 document.getElementById('flashReveal').addEventListener('click',()=>{if(window.JL_CURRENT){document.getElementById('flashMeaning').textContent=window.JL_CURRENT.meaning;document.getElementById('mainFlashcard')?.classList.add('revealed')}});
 document.getElementById('flashSpeak').addEventListener('click',()=>{if(window.JL_CURRENT)speak(window.JL_CURRENT.japanese)});
 document.getElementById('flashFav').addEventListener('click',()=>{if(window.JL_CURRENT)toggleFavorite(window.JL_CURRENT.japanese)});
@@ -1746,7 +1817,7 @@ async function init() {
   } catch (e) { console.warn(e); }
   overlay.classList.add('hidden');
   renderHistory(); updateProgress(); startQuiz('hiragana');
-  renderStore(); initGate(); renderKesopananList();
+  renderStore(); initGate(); renderKesopananList(); updateAccessUI();
   checkAutoLogin();
 }
 init();
