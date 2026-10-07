@@ -1,7 +1,0 @@
-{
-  "name": "nihongo-premium",
-  "private": true,
-  "version": "final-2026.10.05",
-  "engines": {"node": ">=18"},
-  "dependencies": {"firebase-admin": "^12.7.0"}
-}
