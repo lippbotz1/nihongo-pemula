@@ -20,11 +20,19 @@ function extractJson(text) {
   if (start >= 0 && end > start) { try { return JSON.parse(raw.slice(start, end + 1)); } catch (_) {} }
   return null;
 }
+function kanaText(value) {
+  const v = cleanText(value);
+  if (!v) return '';
+  // TTS reading must be kana-only (plus normal Japanese punctuation/spaces).
+  // Kanji is intentionally rejected because a single kanji can have multiple readings.
+  return /[\u3400-\u9fff\uf900-\ufaff]/.test(v) ? '' : v;
+}
 function level(x, key) {
   const v = x?.politenessLevels?.[key] || {};
   return {
     available: v.available === true,
     japanese: cleanText(v.japanese),
+    ttsKana: kanaText(v.ttsKana),
     romaji: cleanText(v.romaji),
     meaningIndonesia: cleanText(v.meaningIndonesia || v.meaning),
     usage: cleanText(v.usage)
@@ -39,16 +47,18 @@ function normalizeResult(value, input) {
   const recommendation = {
     bestLabel: cleanText(rec.bestLabel) || 'Sopan / Polite',
     bestJapanese: cleanText(rec.bestJapanese) || japanese,
+    bestTtsKana: kanaText(rec.bestTtsKana),
     bestRomaji: cleanText(rec.bestRomaji) || romaji,
     bestMeaning: cleanText(rec.bestMeaning) || meaning,
     bestUsage: cleanText(rec.bestUsage) || 'Pilihan paling aman untuk percakapan umum.',
     reason: cleanText(rec.reason) || 'Bentuk ini terdengar natural dan sopan untuk konteks umum.',
     shortAlternativeJapanese: cleanText(rec.shortAlternativeJapanese),
+    shortAlternativeTtsKana: kanaText(rec.shortAlternativeTtsKana),
     shortAlternativeRomaji: cleanText(rec.shortAlternativeRomaji),
     shortAlternativeMeaning: cleanText(rec.shortAlternativeMeaning)
   };
   return {
-    translatedText: japanese, romaji, meaning,
+    translatedText: japanese, ttsKana: kanaText(x.ttsKana), romaji, meaning,
     formality: cleanText(x.formality) || recommendation.bestLabel,
     explanation: cleanText(x.explanation) || 'Terjemahan AI dengan bentuk Bahasa Jepang yang natural dan sopan.',
     category: cleanText(x.category) || 'Ungkapan / Kosakata',
@@ -68,15 +78,15 @@ const JSON_SCHEMA = {
     japanese: {type:'string'}, romaji:{type:'string'}, meaningIndonesia:{type:'string'}, formality:{type:'string'}, explanation:{type:'string'},
     category:{type:'string'}, pos:{type:'string'}, form:{type:'string'}, jlpt:{type:'string'}, alternative:{type:'string'},
     recommendation: {type:'object', properties:{
-      bestLabel:{type:'string'}, bestJapanese:{type:'string'}, bestRomaji:{type:'string'}, bestMeaning:{type:'string'}, bestUsage:{type:'string'}, reason:{type:'string'},
-      shortAlternativeJapanese:{type:'string'}, shortAlternativeRomaji:{type:'string'}, shortAlternativeMeaning:{type:'string'}
-    }, required:['bestLabel','bestJapanese','bestRomaji','bestMeaning','bestUsage','reason','shortAlternativeJapanese','shortAlternativeRomaji','shortAlternativeMeaning']},
+      bestLabel:{type:'string'}, bestJapanese:{type:'string'}, bestTtsKana:{type:'string'}, bestRomaji:{type:'string'}, bestMeaning:{type:'string'}, bestUsage:{type:'string'}, reason:{type:'string'},
+      shortAlternativeJapanese:{type:'string'}, shortAlternativeTtsKana:{type:'string'}, shortAlternativeRomaji:{type:'string'}, shortAlternativeMeaning:{type:'string'}
+    }, required:['bestLabel','bestJapanese','bestTtsKana','bestRomaji','bestMeaning','bestUsage','reason','shortAlternativeJapanese','shortAlternativeTtsKana','shortAlternativeRomaji','shortAlternativeMeaning']},
     politenessLevels: {type:'object', properties:{
-      casual:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']},
-      neutral:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']},
-      polite:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']},
-      formal:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']},
-      honorific:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']},
+      casual:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},ttsKana:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','ttsKana','romaji','meaningIndonesia','usage']},
+      neutral:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},ttsKana:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','ttsKana','romaji','meaningIndonesia','usage']},
+      polite:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},ttsKana:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','ttsKana','romaji','meaningIndonesia','usage']},
+      formal:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},ttsKana:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','ttsKana','romaji','meaningIndonesia','usage']},
+      honorific:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},ttsKana:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','ttsKana','romaji','meaningIndonesia','usage']},
       humble:{type:'object',properties:{available:{type:'boolean'},japanese:{type:'string'},romaji:{type:'string'},meaningIndonesia:{type:'string'},usage:{type:'string'}},required:['available','japanese','romaji','meaningIndonesia','usage']}
     }, required:['casual','neutral','polite','formal','honorific','humble']}
   },
@@ -95,6 +105,8 @@ function buildPrompt(input, sl) {
     'Honorific dan humble hanya boleh diisi jika bentuk tersebut benar-benar sesuai secara tata bahasa dan konteks. Jangan mengarang bentuk hormat/humble hanya agar keenam kartu terisi.',
     'Untuk kalimat perkenalan, permintaan, pekerjaan, pelanggan, atasan, layanan, dan situasi resmi, jelaskan pilihan yang paling aman. Rekomendasi harus terdengar seperti jawaban manusia yang natural.',
     'Romaji wajib berupa Latin standar, bersih, konsisten, tanpa Kanji/Hiragana/Katakana. Jangan gunakan ejaan fonetik Indonesia seperti Kon-ni-chi-wa.',
+    'SANGAT PENTING UNTUK AUDIO: setiap field Jepang yang akan dibaca TTS WAJIB memiliki field ttsKana/bestTtsKana/shortAlternativeTtsKana. Isinya harus menjadi pembacaan persis dari teks Jepang tersebut dalam HIRAGANA/KATAKANA, tanpa Kanji. Jangan menebak bacaan Kanji; tulis furigana lengkap untuk seluruh teks, termasuk partikel (misalnya は sebagai wa hanya jika teksnya memang dibaca wa).',
+    'ttsKana harus benar-benar cocok dengan teks Jepang dan romaji yang diberikan. Untuk Kanji dengan banyak bacaan, pilih bacaan yang tepat sesuai konteks kalimat/arti yang ditulis. Jika bentuk level unavailable=false, ttsKana harus berupa string kosong.',
     'meaningIndonesia harus berupa arti Indonesia yang natural. explanation dan usage harus ringkas tetapi berguna untuk belajar.',
     'Jika input berupa Bahasa Jepang, pertahankan teks sumber sebagai konteks dan tetap berikan rekomendasi bentuk Jepang yang natural bila perlu.',
     'Jawab HANYA JSON sesuai schema. Jangan menambahkan markdown atau komentar.',
