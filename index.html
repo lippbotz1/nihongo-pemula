@@ -643,9 +643,9 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div id="learn-angka" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🔢 Angka</h3><div id="angkaList"></div></div></div>
     <div id="learn-waktu" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🕐 Hari</h3><div id="hariList"></div></div></div>
     <div id="learn-grammar" class="learn-content premium-learn-content"><div class="lesson-card"><h3>📖 Grammar</h3>
-      <div class="grammar-box" data-speak="私は学生です。"><div class="pattern">A は B です</div><div class="meaning">A adalah B</div><div class="example"><span class="jp">私は学生です。</span><span class="dim">Watashi wa gakusei desu.</span></div></div>
-      <div class="grammar-box" data-speak="水をください。"><div class="pattern">～をください</div><div class="meaning">Tolong beri ~</div><div class="example"><span class="jp">水をください。</span><span class="dim">Mizu o kudasai.</span></div></div>
-      <div class="grammar-box" data-speak="日本へ行きたいです。"><div class="pattern">～たいです</div><div class="meaning">Saya ingin ~</div><div class="example"><span class="jp">日本へ行きたいです。</span><span class="dim">Nihon e ikitai desu.</span></div></div>
+      <div class="grammar-box" data-speak="わたしはがくせいです。"><div class="pattern">A は B です</div><div class="meaning">A adalah B</div><div class="example"><span class="jp">私は学生です。</span><span class="dim">Watashi wa gakusei desu.</span></div></div>
+      <div class="grammar-box" data-speak="みずをください。"><div class="pattern">～をください</div><div class="meaning">Tolong beri ~</div><div class="example"><span class="jp">水をください。</span><span class="dim">Mizu o kudasai.</span></div></div>
+      <div class="grammar-box" data-speak="にほんへいきたいです。"><div class="pattern">～たいです</div><div class="meaning">Saya ingin ~</div><div class="example"><span class="jp">日本へ行きたいです。</span><span class="dim">Nihon e ikitai desu.</span></div></div>
     </div></div>
     <div id="learn-kesopanan" class="learn-content premium-learn-content"><div class="lesson-card"><h3>🎌 Tingkat Kesopanan</h3><p>Klik kartu untuk mendengar.</p><div id="kesopananList"></div></div></div>
   </div>
@@ -1145,15 +1145,15 @@ function renderAkun() {
 }
 
 const formalityDict = {
-  'こんにちは': { category:'Sapaan Siang', variants:[{level:'Kasual',jp:'やあ',romaji:'yaa',id:'Hai',note:'Ke teman'},{level:'Sopan',jp:'こんにちは',romaji:'konnichiwa',id:'Selamat siang',note:'Standar'},{level:'Formal',jp:'ごきげんよう',romaji:'gokigenyou',id:'Salam sejahtera',note:'Sangat formal'}]},
-  'おはよう': { category:'Sapaan Pagi', variants:[{level:'Kasual',jp:'おはよう',romaji:'ohayou',id:'Pagi!',note:'Ke teman'},{level:'Sopan',jp:'おはようございます',romaji:'ohayou gozaimasu',id:'Selamat pagi',note:'Standar'}]},
-  'ありがとう': { category:'Terima Kasih', variants:[{level:'Kasual',jp:'ありがとう',romaji:'arigatou',id:'Makasih',note:'Ke teman'},{level:'Sopan',jp:'ありがとうございます',romaji:'arigatou gozaimasu',id:'Terima kasih',note:'Standar'},{level:'Formal',jp:'誠にありがとうございます',romaji:'makoto ni arigatou gozaimasu',id:'Terima kasih sebesar-besarnya',note:'Bisnis'}]},
-  'すみません': { category:'Permisi/Maaf', variants:[{level:'Kasual',jp:'ごめん',romaji:'gomen',id:'Maaf',note:'Ke teman'},{level:'Sopan',jp:'すみません',romaji:'sumimasen',id:'Permisi/Maaf',note:'Standar'},{level:'Formal',jp:'申し訳ございません',romaji:'moushiwake gozaimasen',id:'Mohon maaf',note:'Bisnis'}]},
-  'はい': { category:'Ya', variants:[{level:'Kasual',jp:'うん',romaji:'un',id:'Iya',note:'Ke teman'},{level:'Sopan',jp:'はい',romaji:'hai',id:'Ya',note:'Standar'},{level:'Formal',jp:'かしこまりました',romaji:'kashikomarimashita',id:'Baik',note:'Bisnis'}]},
-  'お疲れ様': { category:'Kerja Keras', variants:[{level:'Kasual',jp:'お疲れ',romaji:'otsukare',id:'Capek ya',note:'Ke teman'},{level:'Sopan',jp:'お疲れ様です',romaji:'otsukaresama desu',id:'Terima kasih atas kerja kerasnya',note:'Kantor'},{level:'Formal',jp:'お疲れ様でございます',romaji:'otsukaresama de gozaimasu',id:'Terima kasih banyak',note:'Bisnis'}]},
-  '食べる': { category:'Makan', variants:[{level:'Kasual',jp:'食べる',romaji:'taberu',id:'Makan',note:'Kamus'},{level:'Sopan',jp:'食べます',romaji:'tabemasu',id:'Makan (sopan)',note:'Standar'},{level:'Hormat',jp:'召し上がる',romaji:'meshiagaru',id:'Makan (hormat)',note:'Untuk atasan'},{level:'Rendah hati',jp:'いただく',romaji:'itadaku',id:'Makan (rendah hati)',note:'Diri sendiri'}]},
-  '行く': { category:'Pergi', variants:[{level:'Kasual',jp:'行く',romaji:'iku',id:'Pergi',note:'Kamus'},{level:'Sopan',jp:'行きます',romaji:'ikimasu',id:'Pergi (sopan)',note:'Standar'},{level:'Hormat',jp:'いらっしゃる',romaji:'irassharu',id:'Pergi (hormat)',note:'Untuk atasan'}]},
-  '見る': { category:'Melihat', variants:[{level:'Kasual',jp:'見る',romaji:'miru',id:'Lihat',note:'Kamus'},{level:'Sopan',jp:'見ます',romaji:'mimasu',id:'Lihat (sopan)',note:'Standar'},{level:'Hormat',jp:'ご覧になる',romaji:'goran ni naru',id:'Melihat (hormat)',note:'Untuk atasan'}]}
+  'こんにちは': { category:'Sapaan Siang', variants:[{level:'Kasual',jp:'やあ',ttsKana:'やあ',romaji:'yaa',id:'Hai',note:'Ke teman'},{level:'Sopan',jp:'こんにちは',ttsKana:'こんにちは',romaji:'konnichiwa',id:'Selamat siang',note:'Standar'},{level:'Formal',jp:'ごきげんよう',ttsKana:'ごきげんよう',romaji:'gokigenyou',id:'Salam sejahtera',note:'Sangat formal'}]},
+  'おはよう': { category:'Sapaan Pagi', variants:[{level:'Kasual',jp:'おはよう',ttsKana:'おはよう',romaji:'ohayou',id:'Pagi!',note:'Ke teman'},{level:'Sopan',jp:'おはようございます',ttsKana:'おはようございます',romaji:'ohayou gozaimasu',id:'Selamat pagi',note:'Standar'}]},
+  'ありがとう': { category:'Terima Kasih', variants:[{level:'Kasual',jp:'ありがとう',ttsKana:'ありがとう',romaji:'arigatou',id:'Makasih',note:'Ke teman'},{level:'Sopan',jp:'ありがとうございます',ttsKana:'ありがとうございます',romaji:'arigatou gozaimasu',id:'Terima kasih',note:'Standar'},{level:'Formal',jp:'誠にありがとうございます',ttsKana:'まことにありがとうございます',romaji:'makoto ni arigatou gozaimasu',id:'Terima kasih sebesar-besarnya',note:'Bisnis'}]},
+  'すみません': { category:'Permisi/Maaf', variants:[{level:'Kasual',jp:'ごめん',ttsKana:'ごめん',romaji:'gomen',id:'Maaf',note:'Ke teman'},{level:'Sopan',jp:'すみません',ttsKana:'すみません',romaji:'sumimasen',id:'Permisi/Maaf',note:'Standar'},{level:'Formal',jp:'申し訳ございません',ttsKana:'もうしわけございません',romaji:'moushiwake gozaimasen',id:'Mohon maaf',note:'Bisnis'}]},
+  'はい': { category:'Ya', variants:[{level:'Kasual',jp:'うん',ttsKana:'うん',romaji:'un',id:'Iya',note:'Ke teman'},{level:'Sopan',jp:'はい',ttsKana:'はい',romaji:'hai',id:'Ya',note:'Standar'},{level:'Formal',jp:'かしこまりました',ttsKana:'かしこまりました',romaji:'kashikomarimashita',id:'Baik',note:'Bisnis'}]},
+  'お疲れ様': { category:'Kerja Keras', variants:[{level:'Kasual',jp:'お疲れ',ttsKana:'おつかれ',romaji:'otsukare',id:'Capek ya',note:'Ke teman'},{level:'Sopan',jp:'お疲れ様です',ttsKana:'おつかれさまです',romaji:'otsukaresama desu',id:'Terima kasih atas kerja kerasnya',note:'Kantor'},{level:'Formal',jp:'お疲れ様でございます',ttsKana:'おつかれさまでございます',romaji:'otsukaresama de gozaimasu',id:'Terima kasih banyak',note:'Bisnis'}]},
+  '食べる': { category:'Makan', variants:[{level:'Kasual',jp:'食べる',ttsKana:'たべる',romaji:'taberu',id:'Makan',note:'Kamus'},{level:'Sopan',jp:'食べます',ttsKana:'たべます',romaji:'tabemasu',id:'Makan (sopan)',note:'Standar'},{level:'Hormat',jp:'召し上がる',ttsKana:'めしあがる',romaji:'meshiagaru',id:'Makan (hormat)',note:'Untuk atasan'},{level:'Rendah hati',jp:'いただく',ttsKana:'いただく',romaji:'itadaku',id:'Makan (rendah hati)',note:'Diri sendiri'}]},
+  '行く': { category:'Pergi', variants:[{level:'Kasual',jp:'行く',ttsKana:'いく',romaji:'iku',id:'Pergi',note:'Kamus'},{level:'Sopan',jp:'行きます',ttsKana:'いきます',romaji:'ikimasu',id:'Pergi (sopan)',note:'Standar'},{level:'Hormat',jp:'いらっしゃる',ttsKana:'いらっしゃる',romaji:'irassharu',id:'Pergi (hormat)',note:'Untuk atasan'}]},
+  '見る': { category:'Melihat', variants:[{level:'Kasual',jp:'見る',ttsKana:'みる',romaji:'miru',id:'Lihat',note:'Kamus'},{level:'Sopan',jp:'見ます',ttsKana:'みます',romaji:'mimasu',id:'Lihat (sopan)',note:'Standar'},{level:'Hormat',jp:'ご覧になる',ttsKana:'ごらんになる',romaji:'goran ni naru',id:'Melihat (hormat)',note:'Untuk atasan'}]}
 };
 function renderFormality(info) {
   const matches = Array.isArray(info) ? info : [{ key: null, info: info }];
@@ -1162,7 +1162,7 @@ function renderFormality(info) {
   container.innerHTML = matches.map(({ key, info: entry }) =>
     '<div class="formality-category">📊 ' + entry.category + '</div>' +
     '<div class="formality-list">' + entry.variants.map(v =>
-      '<div class="formality-item" data-speak="' + v.jp.replace(/"/g,'&quot;') + '"><div class="formality-level">' + v.level + '</div><div class="formality-jp">' + v.jp + '</div><div class="formality-romaji">' + v.romaji + '</div><div class="formality-id">🇮🇩 ' + v.id + '</div><div class="formality-note">' + v.note + '</div></div>'
+      '<div class="formality-item" data-speak="' + (v.ttsKana || v.jp).replace(/"/g,'&quot;') + '"><div class="formality-level">' + v.level + '</div><div class="formality-jp">' + v.jp + '</div><div class="formality-romaji">' + v.romaji + '</div><div class="formality-id">🇮🇩 ' + v.id + '</div><div class="formality-note">' + v.note + '</div></div>'
     ).join('') + '</div>'
   ).join('');
 }
@@ -1171,7 +1171,7 @@ function renderKesopananList() {
   if (!el) return;
   el.innerHTML = Object.keys(formalityDict).map(key => {
     const entry = formalityDict[key];
-    return '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:var(--violet);margin-bottom:10px">📊 ' + entry.category + '</div>' + entry.variants.map(v => '<div class="formality-item" data-speak="' + v.jp.replace(/"/g,'&quot;') + '" style="margin-bottom:6px"><div class="formality-level">' + v.level + '</div><div class="formality-jp">' + v.jp + '</div><div class="formality-romaji">' + v.romaji + '</div><div class="formality-id">🇮🇩 ' + v.id + '</div><div class="formality-note">' + v.note + '</div></div>').join('') + '</div>';
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:var(--violet);margin-bottom:10px">📊 ' + entry.category + '</div>' + entry.variants.map(v => '<div class="formality-item" data-speak="' + (v.ttsKana || v.jp).replace(/"/g,'&quot;') + '" style="margin-bottom:6px"><div class="formality-level">' + v.level + '</div><div class="formality-jp">' + v.jp + '</div><div class="formality-romaji">' + v.romaji + '</div><div class="formality-id">🇮🇩 ' + v.id + '</div><div class="formality-note">' + v.note + '</div></div>').join('') + '</div>';
   }).join('');
 }
 
@@ -1293,7 +1293,18 @@ document.getElementById('quizTabs').addEventListener('click', e => {
 let maleVoice = null, femaleVoice = null;
 let currentVoiceGender = localStorage.getItem('voice_gender') || 'male';
 let speaking = false;
-function initVoices() { if (!('speechSynthesis' in window)) return; const voices = speechSynthesis.getVoices(); const jp = voices.filter(v => v.lang.startsWith('ja')); maleVoice = jp[0] || null; femaleVoice = jp[1] || jp[0] || null; updateVoiceUI(); }
+function initVoices() {
+  if (!('speechSynthesis' in window)) return;
+  const voices = speechSynthesis.getVoices();
+  const jp = voices.filter(v => /^ja(?:-|_)/i.test(v.lang || ''));
+  // Prefer exact Japanese locale first. Voice gender is only a UI preference;
+  // never use a non-Japanese voice for Japanese text.
+  const exact = jp.filter(v => String(v.lang || '').toLowerCase() === 'ja-jp');
+  const pool = exact.length ? exact : jp;
+  maleVoice = pool[0] || null;
+  femaleVoice = pool[1] || pool[0] || null;
+  updateVoiceUI();
+}
 if ('speechSynthesis' in window) { initVoices(); speechSynthesis.onvoiceschanged = initVoices; }
 function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
@@ -1571,26 +1582,26 @@ function renderFormalityLevels(ai){
     const v=levels[key]||{};
     const best=String(rec.bestLabel||'').toLowerCase().includes(labelPlain.split(' / ')[0].toLowerCase()) || (key==='polite' && String(rec.bestLabel||'').toLowerCase().includes('sopan'));
     if(!v.available){return `<div class="formality-card unavailable"><div class="formality-card-label">${escapeHtml(label)}</div><div class="formality-unavailable">Tidak ada bentuk khusus yang natural untuk konteks ini.</div></div>`}
-    const jp=String(v.japanese||'').trim();
-    return `<div class="formality-card available" data-speak="${escapeAttr(jp)}" role="button" tabindex="0" aria-label="Dengarkan ${escapeAttr(labelPlain)}"><div class="formality-card-label">${escapeHtml(label)}</div>${best?'<span class="formality-best">★ REKOMENDASI</span>':''}<div class="formality-card-jp">${escapeHtml(v.japanese||'—')}</div><div class="formality-card-romaji">${escapeHtml(v.romaji||'—')}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(v.meaningIndonesia||'—')}</div><div class="formality-card-use">${escapeHtml(v.usage||'Sesuai konteks penggunaan.')}</div><div class="formality-card-listen">🔊 Ketuk untuk mendengarkan</div></div>`;
+    const jp=String(v.japanese||'').trim(); const tts=String(v.ttsKana||'').trim() || jp;
+    return `<div class="formality-card available" data-speak="${escapeAttr(tts)}" role="button" tabindex="0" aria-label="Dengarkan ${escapeAttr(labelPlain)}"><div class="formality-card-label">${escapeHtml(label)}</div>${best?'<span class="formality-best">★ REKOMENDASI</span>':''}<div class="formality-card-jp">${escapeHtml(v.japanese||'—')}</div><div class="formality-card-romaji">${escapeHtml(v.romaji||'—')}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(v.meaningIndonesia||'—')}</div><div class="formality-card-use">${escapeHtml(v.usage||'Sesuai konteks penggunaan.')}</div><div class="formality-card-listen">🔊 Ketuk untuk mendengarkan</div></div>`;
   }).join('');
   const altJp=String(rec.shortAlternativeJapanese||'').trim();
-  const shortAlt=(altJp&&rec.shortAlternativeRomaji)?`<div class="ai-short-alt" data-speak="${escapeAttr(altJp)}" role="button" tabindex="0"><b>🔄 ALTERNATIF SINGKAT · 🔊 KETUK UNTUK MENDENGARKAN</b><div class="formality-card-jp">${escapeHtml(altJp)}</div><div class="formality-card-romaji">${escapeHtml(rec.shortAlternativeRomaji)}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(rec.shortAlternativeMeaning||'')}</div></div>`:'';
-  const bestJp=String(rec.bestJapanese||ai.translatedText||'').trim();
-  content.innerHTML=`<div class="ai-recommendation" data-speak="${escapeAttr(bestJp)}" role="button" tabindex="0" aria-label="Dengarkan rekomendasi AI"><div class="ai-recommendation-label">💡 Rekomendasi AI — paling natural & aman · 🔊 KETUK UNTUK MENDENGARKAN</div><div class="ai-recommendation-jp">${escapeHtml(bestJp||'—')}</div><div class="ai-recommendation-romaji">${escapeHtml(rec.bestRomaji||ai.romaji||'—')}</div><div class="ai-recommendation-id">🇮🇩 ${escapeHtml(rec.bestMeaning||ai.meaning||'—')}</div><div class="ai-recommendation-use">📌 ${escapeHtml(rec.bestUsage||'Pilihan aman untuk konteks umum.')}</div><div class="ai-recommendation-reason">${escapeHtml(rec.reason||'')}</div>${shortAlt}</div><div class="formality-grid">${cards}</div>`;
+  const shortAlt=(altJp&&rec.shortAlternativeRomaji)?`<div class="ai-short-alt" data-speak="${escapeAttr(rec.shortAlternativeTtsKana||altJp)}" role="button" tabindex="0"><b>🔄 ALTERNATIF SINGKAT · 🔊 KETUK UNTUK MENDENGARKAN</b><div class="formality-card-jp">${escapeHtml(altJp)}</div><div class="formality-card-romaji">${escapeHtml(rec.shortAlternativeRomaji)}</div><div class="formality-card-id">🇮🇩 ${escapeHtml(rec.shortAlternativeMeaning||'')}</div></div>`:'';
+  const bestJp=String(rec.bestJapanese||ai.translatedText||'').trim(); const bestTts=String(rec.bestTtsKana||ai.ttsKana||'').trim() || bestJp;
+  content.innerHTML=`<div class="ai-recommendation" data-speak="${escapeAttr(bestTts)}" role="button" tabindex="0" aria-label="Dengarkan rekomendasi AI"><div class="ai-recommendation-label">💡 Rekomendasi AI — paling natural & aman · 🔊 KETUK UNTUK MENDENGARKAN</div><div class="ai-recommendation-jp">${escapeHtml(bestJp||'—')}</div><div class="ai-recommendation-romaji">${escapeHtml(rec.bestRomaji||ai.romaji||'—')}</div><div class="ai-recommendation-id">🇮🇩 ${escapeHtml(rec.bestMeaning||ai.meaning||'—')}</div><div class="ai-recommendation-use">📌 ${escapeHtml(rec.bestUsage||'Pilihan aman untuk konteks umum.')}</div><div class="ai-recommendation-reason">${escapeHtml(rec.reason||'')}</div>${shortAlt}</div><div class="formality-grid">${cards}</div>`;
   if(box)box.classList.add('show'); bindTranslateSpeakCards();
 }
 function showTranslationResult(ai,original){
   const clean=String(ai?.translatedText||'').trim(),romaji=String(ai?.romaji||'').trim(),id=String(ai?.meaning||'').trim();
   const formality=String(ai?.formality||ai?.recommendation?.bestLabel||'Sopan / Polite').trim();
-  currentTranslationState={jp:clean,id,romaji,originalText:original,entry:null,formality,ai};
+  currentTranslationState={jp:clean,ttsKana:String(ai.ttsKana||'').trim()||clean,id,romaji,originalText:original,entry:null,formality,ai};
   document.getElementById('resultMain').textContent=clean;
   const romajiEl=document.getElementById('resultRomaji');romajiEl.textContent=romaji||'Bacaan belum tersedia';romajiEl.classList.toggle('romaji-unavailable',!romaji);
   document.getElementById('resultMeaning').textContent=id||'—';
   const set=(idEl,v)=>{const el=document.getElementById(idEl);if(el)el.textContent=v||'—'};
   set('resultFormalityMain',formality);set('resultNote',ai?.explanation||'Terjemahan AI berhasil.');set('resultPos',ai?.pos||'—');set('resultForm',ai?.form||'—');set('resultJlpt',ai?.jlpt||'Tidak ditentukan');
   const ex=document.getElementById('translateExample');if(ex)ex.style.display='none';
-  const resultBox=document.getElementById('translateResult');resultBox.classList.add('show');resultBox.setAttribute('data-speak',clean);
+  const resultBox=document.getElementById('translateResult');resultBox.classList.add('show');resultBox.setAttribute('data-speak',String(ai.ttsKana||'').trim()||clean);
   renderFormalityLevels(ai);
   addToHistory({jp:clean,romaji:romaji||'—',id,originalText:original});
   setTimeout(()=>speak(clean),120);
@@ -1635,7 +1646,7 @@ function renderHistory() {
   const h = JSON.parse(localStorage.getItem('translate_history_v19') || '[]');
   const list = document.getElementById('historyList');
   if (h.length === 0) { list.innerHTML = '<div class="history-empty">Belum ada riwayat.</div>'; return; }
-  list.innerHTML = h.map(x => '<div class="history-item-row" data-speak="' + (x.jp || '').replace(/"/g,'&quot;') + '"><div class="history-item-jp">' + (x.jp || '') + '</div><div class="history-item-romaji">' + (x.romaji || '-') + '</div><div class="history-item-id">' + (x.id || '') + '</div></div>').join('');
+  list.innerHTML = h.map(x => '<div class="history-item-row" data-speak="' + (x.ttsKana || x.jp || '').replace(/"/g,'&quot;') + '"><div class="history-item-jp">' + (x.jp || '') + '</div><div class="history-item-romaji">' + (x.romaji || '-') + '</div><div class="history-item-id">' + (x.id || '') + '</div></div>').join('');
 }
 function clearHistory() { if (!confirm('Hapus?')) return; localStorage.removeItem('translate_history_v19'); renderHistory(); }
 
@@ -1647,8 +1658,8 @@ const kanjiData = [['一','satu','ichi'],['二','dua','ni'],['三','tiga','san']
 const KANJI_SPEAK_KANA = {"一":"いち","二":"に","三":"さん","四":"よん","五":"ご","六":"ろく","七":"なな","八":"はち","九":"きゅう","十":"じゅう","百":"ひゃく","千":"せん","万":"まん","円":"えん","日":"ひ","月":"つき","年":"とし","時":"とき","今":"いま","前":"まえ","人":"ひと","子":"こ","女":"おんな","男":"おとこ","父":"ちち","母":"はは","友":"とも","先":"さき","生":"いきる","名":"な","国":"くに","学":"まなぶ","駅":"えき","店":"みせ","道":"みち","山":"やま","川":"かわ","天":"てん","気":"き","上":"うえ","下":"した","中":"なか","外":"そと","左":"ひだり","右":"みぎ","東":"ひがし","西":"にし","南":"みなみ","北":"きた","家":"いえ","行":"いく","来":"くる","見":"みる","聞":"きく","読":"よむ","書":"かく","話":"はなす","食":"たべる","飲":"のむ","買":"かう","大":"おおきい","小":"ちいさい","高":"たかい","安":"やすい","新":"あたらしい","古":"ふるい","長":"ながい","白":"しろい","黒":"くろい","赤":"あかい","青":"あおい","本":"ほん","水":"みず","金":"かね","電":"でん","車":"くるま","手":"て","目":"め","口":"くち","語":"ご"};
 ;
 const frasaData = [['おはようございます','ohayou gozaimasu','Selamat pagi'],['こんにちは','konnichiwa','Halo'],['こんばんは','konbanwa','Selamat malam'],['おやすみなさい','oyasuminasai','Selamat tidur'],['さようなら','sayounara','Selamat tinggal'],['またね','mata ne','Sampai jumpa'],['ありがとうございます','arigatou gozaimasu','Terima kasih'],['どういたしまして','dou itashimashite','Sama-sama'],['すみません','sumimasen','Permisi'],['ごめんなさい','gomen nasai','Maaf'],['いただきます','itadakimasu','Sebelum makan'],['ごちそうさまでした','gochisousama deshita','Terima kasih makanannya'],['おいしい','oishii','Enak'],['トイレはどこですか','toire wa doko desu ka','Di mana toiletnya?'],['いくらですか','ikura desu ka','Berapa harganya?'],['わかりません','wakarimasen','Saya tidak mengerti'],['わかりました','wakarimashita','Saya mengerti'],['たすけて','tasukete','Tolong!']];
-const angkaData = [['一','ichi','1'],['二','ni','2'],['三','san','3'],['四','yon','4'],['五','go','5'],['六','roku','6'],['七','nana','7'],['八','hachi','8'],['九','kyuu','9'],['十','juu','10']];
-const hariData = [['月曜日','getsuyoubi','Senin'],['火曜日','kayoubi','Selasa'],['水曜日','suiyoubi','Rabu'],['木曜日','mokuyoubi','Kamis'],['金曜日','kinyoubi','Jumat'],['土曜日','doyoubi','Sabtu'],['日曜日','nichiyoubi','Minggu']];
+const angkaData = [['一','ichi','1','いち'],['二','ni','2','に'],['三','san','3','さん'],['四','yon','4','よん'],['五','go','5','ご'],['六','roku','6','ろく'],['七','nana','7','なな'],['八','hachi','8','はち'],['九','kyuu','9','きゅう'],['十','juu','10','じゅう']];
+const hariData = [['月曜日','getsuyoubi','Senin','げつようび'],['火曜日','kayoubi','Selasa','かようび'],['水曜日','suiyoubi','Rabu','すいようび'],['木曜日','mokuyoubi','Kamis','もくようび'],['金曜日','kinyoubi','Jumat','きんようび'],['土曜日','doyoubi','Sabtu','どようび'],['日曜日','nichiyoubi','Minggu','にちようび']];
 
 function renderGrid(id, data, type) {
   const el = document.getElementById(id); if (!el) return;
@@ -1660,7 +1671,7 @@ function renderGrid(id, data, type) {
 }
 function renderPhraseList(id, data) {
   const el = document.getElementById(id); if (!el) return;
-  el.innerHTML = data.map(([jp, romaji, id]) => '<div class="phrase-row" data-speak="' + jp + '"><div class="phrase-jp">' + jp + '</div><div class="phrase-romaji">' + romaji + '</div><div class="phrase-id">' + id + '</div></div>').join('');
+  el.innerHTML = data.map(([jp, romaji, id, speakKana]) => '<div class="phrase-row" data-speak="' + escapeAttr(speakKana || jp) + '" data-speak-romaji="' + escapeAttr(romaji) + '"><div class="phrase-jp">' + jp + '</div><div class="phrase-romaji">' + romaji + '</div><div class="phrase-id">' + id + '</div></div>').join('');
 }
 renderGrid('hiraganaGrid', hiraganaData, 'kana');
 renderGrid('hiraganaDakuten', hiraganaDakuten, 'kana');
@@ -1804,7 +1815,7 @@ document.getElementById('translateInput').addEventListener('keydown', e => { if 
 document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
 document.getElementById('newQuizBtn').addEventListener('click', () => startQuiz(currentQuizType));
 document.getElementById('resetBtn').addEventListener('click', resetAll);
-document.getElementById('resultSpeakBtn')?.addEventListener('click',()=>{if(currentTranslationState?.jp)speak(currentTranslationState.jp)});
+document.getElementById('resultSpeakBtn')?.addEventListener('click',()=>{if(currentTranslationState?.ttsKana)speak(currentTranslationState.ttsKana);else if(currentTranslationState?.jp)speak(currentTranslationState.jp)});
 document.getElementById('resultCopyBtn')?.addEventListener('click',async()=>{const x=currentTranslationState;if(!x)return;try{await navigator.clipboard.writeText(x.jp+'\n'+(x.romaji||'')+'\n'+x.id);const b=document.getElementById('resultCopyBtn'),old=b.textContent;b.textContent='✅ Tersalin';setTimeout(()=>b.textContent=old,1200)}catch(e){}});
 document.getElementById('resultFavBtn')?.addEventListener('click',()=>{const x=currentTranslationState;if(!x)return;const k=jlKey(x.jp);jlFav.has(k)?jlFav.delete(k):jlFav.add(k);jlSave(JL_FAV,[...jlFav]);const b=document.getElementById('resultFavBtn');b.textContent=jlFav.has(k)?'⭐ Favorit tersimpan':'☆ Favorit'});
 document.getElementById('resultLearnBtn')?.addEventListener('click',()=>{const x=currentTranslationState;if(!x)return;document.querySelector('[data-tab="upgrade"]')?.click();setTimeout(()=>{const inp=document.getElementById('vocabSearch');if(inp){inp.value=x.jp;renderVocabList(x.jp)}},80)});
