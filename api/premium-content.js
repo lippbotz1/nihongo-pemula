@@ -27,6 +27,6 @@ module.exports=async(req,res)=>{
     return json(res,200,{ok:true,items:premiumItems,expiresAt:exp,duration:lic.duration||null});
   }catch(e){
     console.error(e);
-    return json(res,e.code==='auth/id-token-expired'||e.code==='auth/argument-error'?401:500,{error:e.message||'server_error'});
+    return json(res,e.status===401||e.code==='auth/id-token-expired'||e.code==='auth/argument-error'?401:500,{error:e.status===401||e.code==='auth/id-token-expired'||e.code==='auth/argument-error'?'unauthorized':'premium_service_unavailable'});
   }
 };
