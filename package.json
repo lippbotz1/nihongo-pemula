@@ -1,7 +1,15 @@
 {
   "name": "nihongo-premium",
   "private": true,
-  "version": "final-2026.10.05",
-  "engines": {"node": ">=18"},
-  "dependencies": {"firebase-admin": "^12.7.0"}
+  "version": "v12.2026.10.14",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  },
+  "scripts": {
+    "audit": "node qa-audit-v12.js",
+    "audit:vocabulary": "node qa-audit.js"
+  }
 }

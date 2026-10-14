@@ -1,0 +1,26 @@
+Nihongo Dasar V8 — audit statis
+
+Perubahan kode:
+- Endpoint admin menolak UID dengan format tidak valid sebelum membentuk path database.
+- Endpoint admin tidak lagi mengirim pesan error internal mentah ke klien.
+- Endpoint konten Premium mengembalikan pesan error generik, bukan detail internal.
+- Endpoint kunci perangkat tidak membocorkan nama perangkat lain pada respons konflik.
+- Versi paket diperbarui ke V8.
+
+Cakupan validasi:
+- Pemeriksaan sintaks JavaScript seluruh file JS dan endpoint API.
+- Sinkronisasi database CORE_VOCAB.
+- Kelengkapan struktur entri.
+- Pemeriksaan ID HTML duplikat.
+- Pemeriksaan aturan Firebase untuk device_lock.
+- Pemeriksaan respons endpoint untuk pola kebocoran error internal.
+
+Batasan: audit statis saja. Belum diuji dengan Firebase/Vercel nyata, browser, atau proofreading linguistik ahli.
+
+Hasil lokal yang terukur:
+- CORE_VOCAB: 1.108 entri di masing-masing sumber; sinkron.
+- Node.js syntax check: PASS untuk index-inline.js, translate.js, api/*.js, qa-audit.js.
+- HTML ID: 143 ID, tanpa duplikat.
+- API error-leak pattern check: PASS untuk endpoint admin dan premium.
+- Device-lock/Firebase static checks: PASS melalui qa-audit.js.
+- Pasangan Kanji/kana berulang: 26 untuk tinjauan manual.

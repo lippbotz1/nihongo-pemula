@@ -1,0 +1,4 @@
+Nihongo Dasar V12 FINAL static QA
+JavaScript files syntax-checked: 10
+Static assertions: 15 passed, 0 failed
+PASS: static checks only; browser/device testing, live Firebase/Vercel checks, and expert language review remain required.

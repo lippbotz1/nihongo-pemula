@@ -1,0 +1,10 @@
+Nihongo Dasar V10 — local QA results
+Date: 2026-10-14
+
+PASS: qa-audit-v10.js — 21 static assertions, 0 failures.
+PASS: vocabulary audit command executed; inspect console output for count and editorial flags.
+PASS: JavaScript API syntax checks.
+PASS: index-inline.js syntax check.
+PASS: index.html and admin.html inline script parsing.
+
+Scope note: Static checks only. No live deployment, Firebase integration, browser interaction, or expert Japanese-language review was performed.

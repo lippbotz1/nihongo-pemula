@@ -95,3 +95,19 @@ Aplikasi tetap menggunakan `ja-JP` dan memprioritaskan voice Jepang dengan local
 
 ## Batasan yang harus jujur disebutkan
 Tidak ada aplikasi web yang dapat menjamin karakteristik suara fisik 100% identik di setiap HP/browser karena voice engine dan voice package disediakan oleh perangkat. Yang dikunci oleh aplikasi adalah **teks bacaan yang dikirim ke Japanese TTS**. Jadi aplikasi tidak lagi sengaja memberikan Kanji tunggal yang ambigu untuk ditebak TTS pada bagian yang sudah diaudit.
+
+## Final strict TTS patch — 2026-10-07
+
+The previous implementation could arbitrarily select the first/second Japanese voice returned by the device. This was removed because voice ordering is device-dependent.
+
+Strict TTS behavior now:
+- learning cards never send displayed romaji to speech synthesis;
+- numeric cards explicitly use kana: いち, に, さん, よん, ご, ろく, なな, はち, きゅう, じゅう;
+- weekday cards explicitly use kana readings;
+- kanji cards use the dedicated `KANJI_SPEAK_KANA` reading map;
+- `SpeechSynthesisUtterance.lang` is always `ja-JP`;
+- an exact `ja-JP` local voice is preferred when available; otherwise the browser selects the appropriate voice for `ja-JP`;
+- no artificial male/female pitch is applied to learning pronunciation;
+- non-Japanese/romaji-only strings are rejected by the strict learning TTS path rather than being spoken with a potentially wrong language voice.
+
+This addresses the application-side cause where a correct kana reading could still be spoken by an arbitrarily selected voice.

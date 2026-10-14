@@ -1,0 +1,10 @@
+Nihongo Dasar V11 — local QA results
+Date: 2026-10-14
+
+Nihongo Dasar V11 static QA
+JavaScript files syntax-checked: 9
+Static assertions: 13 passed, 0 failed
+PASS: static checks only; browser, live Firebase/Vercel, and expert language review still required.
+
+PASS: inline JavaScript blocks in index.html and admin.html passed Node syntax checks.
+Scope note: Static checks only. No live deployment, Firebase integration, browser interaction, or expert Japanese-language review was performed.

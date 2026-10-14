@@ -1,0 +1,12 @@
+Nihongo Dasar V9 — hasil pemeriksaan lokal
+
+PASS: Node.js syntax check untuk 8 file JS (endpoint API, index-inline.js, skrip QA, translate.js).
+PASS: Sintaks JavaScript untuk 2 blok inline index.html dan 1 blok inline admin.html.
+PASS: QA regresi V9: semua assertion statis lulus.
+PASS: QA kosakata: CORE_VOCAB 1.108 entri di index.html dan index-inline.js, sinkron.
+PASS: Kelengkapan struktur entri sesuai pemeriksaan qa-audit.js.
+PASS: Firebase Rules menolak akses baca/tulis langsung ke device_lock.
+PASS: Kode browser memanggil /api/device-lock, bukan mengakses device_lock langsung.
+INFO: 26 pasangan Kanji/kana berulang untuk review manual.
+NOT TESTED: Firebase/Vercel live, browser runtime, token revocation end-to-end, pembayaran, serta uji keamanan penetrasi.
+NOT VERIFIED: proofread linguistik seluruh kosakata, romaji, contoh kalimat, dan klasifikasi JLPT oleh ahli.

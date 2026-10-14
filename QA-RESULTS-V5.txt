@@ -1,0 +1,8 @@
+Nihongo static QA — V5
+index.html entries: 1108
+index-inline.js entries: 1108
+JLPT / level distribution: {"N5":644,"Belum ditetapkan":13,"N4":358,"N3":54,"N2":39}
+duplicate kanji+kana keys: 26
+structural issues: 0
+Duplicates for manual editorial review: 心配 / しんぱい (2); 便利 / べんり (2); 必要 / ひつよう (2); 値段 / ねだん (2); 現金 / げんきん (2); 準備 / じゅんび (2); 約束 / やくそく (2); 予約 / よやく (2); 理由 / りゆう (2); 気持ち / きもち (2); 台風 / たいふう (2); 特別 / とくべつ (2); 安全 / あんぜん (2); 危険 / きけん (2); 自然 / しぜん (2); 説明 / せつめい (2); 商品 / しょうひん (2); 領収書 / りょうしゅうしょ (2); 方法 / ほうほう (2); 目的 / もくてき (2); 経験 / けいけん (2); 機会 / きかい (2); 安心 / あんしん (2); 十分 / じゅうぶん (2); 複雑 / ふくざつ (2); 習慣 / しゅうかん (2)
+PASS: data is parseable, synchronized, and structurally complete. This is not a certification of linguistic accuracy or JLPT official classification.

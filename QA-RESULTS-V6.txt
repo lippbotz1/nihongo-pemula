@@ -1,0 +1,12 @@
+Nihongo Dasar V6 — QA statis
+- index.html: 1.108 entri kosakata
+- index-inline.js: 1.108 entri kosakata
+- database sinkron: PASS
+- kolom utama dan contoh kalimat terisi: PASS
+- direct client device_lock access: PASS (tidak ditemukan)
+- rules device_lock read/write deny: PASS
+- endpoint api/device-lock.js tersedia: PASS
+- JavaScript syntax: PASS (lihat laporan audit)
+- duplicate Kanji/kana pairs: 26 untuk tinjauan editorial
+- browser/Firebase/Vercel runtime tests: NOT RUN
+- proofreading linguistik ahli: NOT COMPLETED
