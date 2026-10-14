@@ -16,11 +16,14 @@ const reply = (res, status, body) => res.status(status).json(body);
 async function verify(req) {
   const header = req.headers.authorization || '';
   if (!header.startsWith('Bearer ')) throw Object.assign(new Error('Unauthorized'), { status: 401 });
-  return admin.auth().verifyIdToken(header.slice(7));
+  return admin.auth().verifyIdToken(header.slice(7), true); // reject revoked sessions
 }
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Pragma', 'no-cache');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
   if (req.method !== 'POST') return reply(res, 405, { error: 'method_not_allowed' });
   try {
     app();
