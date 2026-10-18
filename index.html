@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Nihongo Dasar — Belajar Bahasa Jepang & Bahasa Dunia</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -135,8 +135,8 @@ header.hero p{color:var(--text-dim);font-size:14px;max-width:560px;margin:0 auto
 .quiz-hint{font-size:13px;color:var(--text-dim);margin-bottom:24px}
 .quiz-options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
 .quiz-option{padding:16px 18px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:var(--text);text-align:center}
-.quiz-option.correct{background:rgba(90,200,250,.15);border-color:var(--mint);color:#b9dcff}
-.quiz-option.wrong{background:rgba(96,165,250,.15);border-color:var(--rose);color:#b9dcff}
+.quiz-option.correct{background:rgba(34,197,94,.20)!important;border-color:#22c55e!important;color:#86efac!important}
+.quiz-option.wrong{background:rgba(239,68,68,.20)!important;border-color:#ef4444!important;color:#fca5a5!important}
 .quiz-option{display:flex;align-items:center;justify-content:center;gap:10px}.quiz-feedback{display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;line-height:1;flex:0 0 auto}.quiz-option.correct .quiz-feedback{filter:drop-shadow(0 1px 4px rgba(34,197,94,.28))}.quiz-option.wrong .quiz-feedback{filter:drop-shadow(0 1px 4px rgba(239,68,68,.28))}
 .translate-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px 24px;margin-bottom:16px}
 .translate-box .box-title{font-size:18px;font-weight:800;margin-bottom:6px;background:var(--gp);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -1816,14 +1816,10 @@ function renderQuestion() {
     b.addEventListener('click', () => checkAnswer(b, opt, a, q)); optsContainer.appendChild(b);
   });
 }
-function addQuizFeedback(button, symbol) {
-  let mark = button.querySelector('.quiz-feedback');
-  if (!mark) { mark = document.createElement('span'); mark.className = 'quiz-feedback'; mark.setAttribute('aria-hidden', 'true'); button.appendChild(mark); }
-  mark.textContent = symbol;
-}
+function addQuizFeedback(button, symbol) { /* Feedback ditampilkan dengan warna, tanpa emoji. */ }
 function checkAnswer(btn, chosen, correct, question) {
-  document.querySelectorAll('#quizOptions .quiz-option').forEach(o => { o.disabled = true; const isCorrect = (o.dataset.answer || o.textContent.trim()) === correct; if (isCorrect) { o.classList.add('correct'); addQuizFeedback(o, '✅'); } });
-  if (chosen === correct) { currentScore++; document.getElementById('quizScore').textContent = currentScore; speak(question); } else { btn.classList.add('wrong'); addQuizFeedback(btn, '❌'); }
+  document.querySelectorAll('#quizOptions .quiz-option').forEach(o => { o.disabled = true; const isCorrect = (o.dataset.answer || o.textContent.trim()) === correct; if (isCorrect) { o.classList.add('correct'); } });
+  if (chosen === correct) { currentScore++; document.getElementById('quizScore').textContent = currentScore; speak(question); } else { btn.classList.add('wrong'); }
   const totalNow = currentQuizQuestions.length || 1;
   const bestPct = Math.round((currentScore / totalNow) * 100);
   if (bestPct > Number(localStorage.getItem(JL_BEST) || 0)) localStorage.setItem(JL_BEST, String(bestPct));
@@ -2013,11 +2009,23 @@ init();
   function candidates(){const level=$('examLevel')?.value||'N5';return (JL_VOCAB||[]).filter(x=>x.meaning&&x.japanese&&(level==='ALL'||x.jlpt===level));}
   function finish(reason){if(!active)return;active=false;if(timer)clearInterval(timer);timer=null;const total=questions.length,percent=total?Math.round(score/total*100):0;const record={at:Date.now(),level:$('examLevel')?.value||'N5',score,total,percent,reason};const h=safeLoad();h.unshift(record);saveHistory(h);$('examPanel').hidden=true;$('examStatus').textContent=`Simulasi selesai (${reason}). Nilai: ${score}/${total} (${percent}%). ${percent>=80?'Bagus sekali!':percent>=60?'Terus latihan!':'Ulangi materi dan coba lagi.'}`;renderHistory();}
   function tick(){const left=Math.max(0,Math.ceil((endsAt-Date.now())/1000));$('examTimer').textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;if(left<=0)finish('waktu habis');}
-  function renderQuestion(){if(!active)return;if(index>=questions.length){finish('semua soal selesai');return;}selected=null;$('examCounter').textContent=`Soal ${index+1}/${questions.length}`;$('examQuestion').textContent=questions[index].japanese;$('examNextBtn').disabled=true;$('examNextBtn').textContent=index===questions.length-1?'Selesai':'Soal Berikutnya';const correct=questions[index].meaning;const pool=shuffle([...new Set(candidates().map(x=>x.meaning).filter(m=>m&&m!==correct))]).slice(0,3);const opts=shuffle([correct,...pool]);const box=$('examOptions');box.innerHTML='';opts.forEach(option=>{const b=document.createElement('button');b.type='button';b.className='quiz-option';b.dataset.answer=option;b.append(document.createTextNode(option));b.addEventListener('click',()=>{if(selected!==null||!active)return;selected=option;const isRight=option===correct;if(isRight)score++;[...box.children].forEach(btn=>{btn.disabled=true;const right=btn.dataset.answer===correct;if(right){btn.classList.add('correct');addQuizFeedback(btn,'✅');}else if(btn===b){btn.classList.add('wrong');addQuizFeedback(btn,'❌');}});$('examStatus').textContent=isRight?'✅ Benar! Jawaban kamu tepat.':'❌ Salah. Jawaban yang benar: '+correct;$('examNextBtn').disabled=false;});box.appendChild(b);});}
+  function renderQuestion(){if(!active)return;if(index>=questions.length){finish('semua soal selesai');return;}selected=null;$('examCounter').textContent=`Soal ${index+1}/${questions.length}`;$('examQuestion').textContent=questions[index].japanese;$('examNextBtn').disabled=true;$('examNextBtn').textContent=index===questions.length-1?'Selesai':'Soal Berikutnya';const correct=questions[index].meaning;const pool=shuffle([...new Set(candidates().map(x=>x.meaning).filter(m=>m&&m!==correct))]).slice(0,3);const opts=shuffle([correct,...pool]);const box=$('examOptions');box.innerHTML='';opts.forEach(option=>{const b=document.createElement('button');b.type='button';b.className='quiz-option';b.dataset.answer=option;b.append(document.createTextNode(option));b.addEventListener('click',()=>{if(selected!==null||!active)return;selected=option;const isRight=option===correct;if(isRight)score++;[...box.children].forEach(btn=>{btn.disabled=true;const right=btn.dataset.answer===correct;if(right){btn.classList.add('correct');}else if(btn===b){btn.classList.add('wrong');}});$('examStatus').textContent=isRight?'Benar! Jawaban kamu tepat.':'Salah. Jawaban yang benar: '+correct;$('examNextBtn').disabled=false;});box.appendChild(b);});}
   function start(){const pool=candidates();if(pool.length<4){$('examStatus').textContent=`Materi level ${$('examLevel').value} belum cukup untuk ujian. Pilih level lain atau Semua level.`;return;}questions=shuffle(pool).slice(0,Math.min(20,pool.length));index=0;score=0;active=true;endsAt=Date.now()+10*60*1000;$('examPanel').hidden=false;$('examStatus').textContent='Pilih satu jawaban untuk setiap soal. Jawaban tidak dapat diubah setelah dipilih.';renderQuestion();tick();if(timer)clearInterval(timer);timer=setInterval(tick,250);}
   function exportProgress(){const data={exportedAt:new Date().toISOString(),vocabularyCount:(JL_VOCAB||[]).length,favorites:jlLoad(JL_FAV),mastered:jlLoad(JL_MASTER),reviewSchedule:jlLoad(JL_REVIEW),bestQuiz:localStorage.getItem(JL_BEST)||'0',examHistory:safeLoad()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nihongo-progres-belajar.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('examStatus').textContent='File progres belajar berhasil disiapkan untuk diunduh.';}
   $('examStartBtn')?.addEventListener('click',start);$('examNextBtn')?.addEventListener('click',()=>{if(!active||selected===null)return;index++;renderQuestion();});$('examExportBtn')?.addEventListener('click',exportProgress);renderHistory();
 })()
 </script>
+
+<script>
+// Nonaktifkan gesture zoom pada perangkat sentuh sesuai permintaan.
+(function(){
+  document.addEventListener('gesturestart', function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('gesturechange', function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('gestureend', function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('wheel', function(e){if(e.ctrlKey)e.preventDefault();},{passive:false});
+  document.addEventListener('keydown', function(e){if((e.ctrlKey||e.metaKey)&&['+','=','-','0'].includes(e.key))e.preventDefault();});
+})();
+</script>
+
 </body>
 </html>
