@@ -1996,5 +1996,22 @@ init();
 })();
 </script>
 
+<script>
+(function initFinalExam(){
+  const $ = id => document.getElementById(id);
+  const HISTORY_KEY='jl_exam_history_v1';
+  let questions=[],index=0,score=0,selected=null,endsAt=0,timer=null,active=false;
+  const safeLoad=()=>{try{const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(x)?x.slice(0,30):[]}catch(_){return[]}};
+  const saveHistory=x=>{try{localStorage.setItem(HISTORY_KEY,JSON.stringify(x.slice(0,30)))}catch(_){}}
+  function renderHistory(){const box=$('examHistory');if(!box)return;const h=safeLoad();box.textContent=h.length?'Riwayat terakhir: '+h.slice(0,5).map(x=>`${x.level} ${x.score}/${x.total} (${x.percent}%) · ${new Date(x.at).toLocaleDateString('id-ID')}`).join(' | '):'Belum ada hasil simulasi.';}
+  function candidates(){const level=$('examLevel')?.value||'N5';return (JL_VOCAB||[]).filter(x=>x.meaning&&x.japanese&&(level==='ALL'||x.jlpt===level));}
+  function finish(reason){if(!active)return;active=false;if(timer)clearInterval(timer);timer=null;const total=questions.length,percent=total?Math.round(score/total*100):0;const record={at:Date.now(),level:$('examLevel')?.value||'N5',score,total,percent,reason};const h=safeLoad();h.unshift(record);saveHistory(h);$('examPanel').hidden=true;$('examStatus').textContent=`Simulasi selesai (${reason}). Nilai: ${score}/${total} (${percent}%). ${percent>=80?'Bagus sekali!':percent>=60?'Terus latihan!':'Ulangi materi dan coba lagi.'}`;renderHistory();}
+  function tick(){const left=Math.max(0,Math.ceil((endsAt-Date.now())/1000));$('examTimer').textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;if(left<=0)finish('waktu habis');}
+  function renderQuestion(){if(!active)return;if(index>=questions.length){finish('semua soal selesai');return;}selected=null;$('examCounter').textContent=`Soal ${index+1}/${questions.length}`;$('examQuestion').textContent=questions[index].japanese;$('examNextBtn').disabled=true;$('examNextBtn').textContent=index===questions.length-1?'Selesai':'Soal Berikutnya';const correct=questions[index].meaning;const pool=shuffle([...new Set(candidates().map(x=>x.meaning).filter(m=>m&&m!==correct))]).slice(0,3);const opts=shuffle([correct,...pool]);const box=$('examOptions');box.innerHTML='';opts.forEach(option=>{const b=document.createElement('button');b.type='button';b.className='quiz-option';b.textContent=option;b.addEventListener('click',()=>{if(selected!==null||!active)return;selected=option;if(option===correct)score++;[...box.children].forEach(btn=>{btn.disabled=true;if(btn.textContent===correct)btn.classList.add('correct');else if(btn===b)btn.classList.add('wrong')});$('examNextBtn').disabled=false;});box.appendChild(b);});}
+  function start(){const pool=candidates();if(pool.length<4){$('examStatus').textContent=`Materi level ${$('examLevel').value} belum cukup untuk ujian. Pilih level lain atau Semua level.`;return;}questions=shuffle(pool).slice(0,Math.min(20,pool.length));index=0;score=0;active=true;endsAt=Date.now()+10*60*1000;$('examPanel').hidden=false;$('examStatus').textContent='Pilih satu jawaban untuk setiap soal. Jawaban tidak dapat diubah setelah dipilih.';renderQuestion();tick();if(timer)clearInterval(timer);timer=setInterval(tick,250);}
+  function exportProgress(){const data={exportedAt:new Date().toISOString(),vocabularyCount:(JL_VOCAB||[]).length,favorites:jlLoad(JL_FAV),mastered:jlLoad(JL_MASTER),reviewSchedule:jlLoad(JL_REVIEW),bestQuiz:localStorage.getItem(JL_BEST)||'0',examHistory:safeLoad()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nihongo-progres-belajar.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('examStatus').textContent='File progres belajar berhasil disiapkan untuk diunduh.';}
+  $('examStartBtn')?.addEventListener('click',start);$('examNextBtn')?.addEventListener('click',()=>{if(!active||selected===null)return;index++;renderQuestion();});$('examExportBtn')?.addEventListener('click',exportProgress);renderHistory();
+})()
+</script>
 </body>
 </html>
